@@ -641,38 +641,12 @@
         <div class="hero-sub">Wähle oder erstelle eine Einkaufsliste</div>
       </div>
 
-      <div class="section-label">Aktive Listen</div>
-
-      <!-- Current list card (active) -->
-      <div class="cat-card" style="margin-bottom:10px">
-        <div style="padding:16px">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-            <div style="width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--hero-from),var(--hero-to));display:flex;align-items:center;justify-content:center;font-size:18px">🛒</div>
-            <div style="flex:1">
-              <div style="font-size:15px;font-weight:600;color:var(--text-1)">Wocheneinkauf</div>
-              <div style="font-size:12px;color:var(--text-3)" id="list-card-sub">Wird geladen …</div>
-            </div>
-            <div style="width:8px;height:8px;border-radius:50%;background:var(--primary)"></div>
-          </div>
-          <div style="background:var(--surface);border-radius:99px;height:4px;overflow:hidden">
-            <div id="list-card-bar" style="height:100%;background:var(--primary);border-radius:99px;transition:width 0.4s;width:0%"></div>
-          </div>
-        </div>
+      <div id="lists-content" style="padding-bottom:8px">
+        <!-- rendered by renderListsScreen() -->
       </div>
 
-      <!-- Placeholder other lists -->
-      <div class="cat-card" style="margin-bottom:10px;opacity:0.55">
-        <div style="padding:16px;display:flex;align-items:center;gap:10px">
-          <div style="width:38px;height:38px;border-radius:12px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:18px">🎉</div>
-          <div>
-            <div style="font-size:15px;font-weight:600;color:var(--text-1)">Grillabend</div>
-            <div style="font-size:12px;color:var(--text-3)">Archiviert</div>
-          </div>
-        </div>
-      </div>
-
-      <div style="margin:8px 16px 16px">
-        <button style="width:100%;border:1.5px dashed var(--card-border);border-radius:16px;padding:14px;background:transparent;color:var(--text-3);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:border-color 0.12s,color 0.12s" onclick="showToast('Neue Listen-Funktion kommt bald!')">
+      <div style="margin:4px 16px 20px">
+        <button onclick="openNewList()" style="width:100%;border:1.5px dashed var(--card-border);border-radius:16px;padding:14px;background:transparent;color:var(--primary);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:border-color 0.12s,color 0.12s">
           + Neue Liste erstellen
         </button>
       </div>
@@ -766,6 +740,34 @@
     </div>
   </div>
 
+  <!-- New List Modal -->
+  <div id="newlist-modal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)" onclick="closeNewListIfBg(event)">
+    <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:412px;background:var(--card);border-radius:24px 24px 0 0;padding:24px 20px;box-shadow:0 -8px 32px rgba(0,0,0,0.12)">
+      <div style="width:36px;height:4px;background:var(--card-border);border-radius:99px;margin:0 auto 20px"></div>
+      <div style="font-size:18px;font-weight:700;color:var(--text-1);margin-bottom:16px">Neue Liste</div>
+
+      <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-3);margin-bottom:8px">Name</div>
+      <input id="newlist-name" type="text" placeholder="z.B. Wocheneinkauf, Party, Urlaub …"
+        style="width:100%;border:1.5px solid var(--card-border);border-radius:14px;padding:12px 14px;font-family:inherit;font-size:15px;color:var(--text-1);background:var(--surface);outline:none;margin-bottom:16px"
+        onkeydown="if(event.key==='Enter') confirmNewList()">
+
+      <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-3);margin-bottom:10px">Farbe</div>
+      <div style="display:flex;gap:10px;margin-bottom:20px">
+        <div class="accent-dot active" data-accent="#10b981" onclick="pickAccent(this)" style="width:32px;height:32px;border-radius:50%;background:#10b981;cursor:pointer;border:3px solid #10b981;outline:3px solid var(--card);outline-offset:1px"></div>
+        <div class="accent-dot" data-accent="#3b82f6" onclick="pickAccent(this)" style="width:32px;height:32px;border-radius:50%;background:#3b82f6;cursor:pointer;border:3px solid transparent"></div>
+        <div class="accent-dot" data-accent="#f97316" onclick="pickAccent(this)" style="width:32px;height:32px;border-radius:50%;background:#f97316;cursor:pointer;border:3px solid transparent"></div>
+        <div class="accent-dot" data-accent="#8b5cf6" onclick="pickAccent(this)" style="width:32px;height:32px;border-radius:50%;background:#8b5cf6;cursor:pointer;border:3px solid transparent"></div>
+        <div class="accent-dot" data-accent="#ef4444" onclick="pickAccent(this)" style="width:32px;height:32px;border-radius:50%;background:#ef4444;cursor:pointer;border:3px solid transparent"></div>
+        <div class="accent-dot" data-accent="#ec4899" onclick="pickAccent(this)" style="width:32px;height:32px;border-radius:50%;background:#ec4899;cursor:pointer;border:3px solid transparent"></div>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <button onclick="document.getElementById('newlist-modal').style.display='none'" style="flex:1;padding:12px;background:var(--surface);border:1.5px solid var(--card-border);border-radius:14px;font-size:14px;font-weight:600;color:var(--text-3);cursor:pointer;font-family:inherit">Abbrechen</button>
+        <button onclick="confirmNewList()" style="flex:2;padding:12px;background:var(--primary);border:none;border-radius:14px;font-size:14px;font-weight:600;color:#fff;cursor:pointer;font-family:inherit">Erstellen</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Store Change Modal -->
   <div id="store-modal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)" onclick="closeStoreIfBg(event)">
     <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:412px;background:var(--card);border-radius:24px 24px 0 0;padding:24px 20px;box-shadow:0 -8px 32px rgba(0,0,0,0.12)">
@@ -834,42 +836,79 @@
       appId:             "1:990532694118:web:dc122f2f1c4595930cbda7",
     };
 
-    let db, itemsRef, fbReady = false;
+    let db, itemsRef, listsRef, fbReady = false;
     try {
       firebase.initializeApp(firebaseConfig);
       db       = firebase.database();
-      itemsRef = db.ref('lists/wocheneinkauf/items');
+      listsRef = db.ref('lists');
       fbReady  = true;
     } catch(e) { console.error('Firebase init:', e); }
 
-    let items = [];
+    let items    = [];
+    let allLists = [];
+    let activeListId = (() => { try { return localStorage.getItem('lb-activeList') || 'wocheneinkauf'; } catch(e) { return 'wocheneinkauf'; } })();
     let selectedCategory = 'Allgemein';
-    let selectedStore = 'Alle';
-    let currentTab = 'list';
+    let selectedStore    = 'Alle';
+    let currentTab       = 'list';
 
     function setStatus(online) {
       const dot  = document.getElementById('status-dot');
       const text = document.getElementById('status-text');
       if (!dot) return;
-      dot.style.background  = online ? 'rgba(255,255,255,0.9)' : 'rgba(255,100,100,0.8)';
-      text.textContent      = online ? 'Online' : 'Offline';
+      dot.style.background = online ? 'rgba(255,255,255,0.9)' : 'rgba(255,100,100,0.8)';
+      text.textContent     = online ? 'Online' : 'Offline';
+    }
+
+    function attachItemsListener(listId) {
+      if (itemsRef) itemsRef.off();
+      itemsRef = db.ref('lists/' + listId + '/items');
+      itemsRef.on('value', snap => {
+        const val = snap.val();
+        items = val ? Object.entries(val).map(([id, d]) => ({ id, ...d })) : [];
+        renderList();
+      });
     }
 
     if (fbReady) {
-      /* live connection indicator */
       db.ref('.info/connected').on('value', snap => setStatus(!!snap.val()));
 
-      /* live data */
-      itemsRef.on('value', snap => {
-        const val = snap.val();
-        items = val
-          ? Object.entries(val).map(([id, d]) => ({ id, ...d }))
-          : [];
-        renderList();
+      /* ensure default list exists */
+      db.ref('lists/wocheneinkauf/name').once('value', snap => {
+        if (!snap.val()) {
+          db.ref('lists/wocheneinkauf').update({ name: 'Wocheneinkauf', accent: '#10b981', createdAt: Date.now() });
+        }
       });
+
+      /* listen to all lists for the Lists screen */
+      listsRef.on('value', snap => {
+        const val = snap.val() || {};
+        allLists = Object.entries(val).map(([id, data]) => ({
+          id,
+          name:      data.name      || id,
+          accent:    data.accent    || '#10b981',
+          createdAt: data.createdAt || 0,
+          total:     data.items ? Object.keys(data.items).length : 0,
+          done:      data.items ? Object.values(data.items).filter(i => i.done).length : 0,
+        })).sort((a, b) => a.createdAt - b.createdAt);
+        if (currentTab === 'lists') renderListsScreen();
+      });
+
+      attachItemsListener(activeListId);
     } else {
       setStatus(false);
       renderList();
+    }
+
+    function setActiveList(id) {
+      activeListId = id;
+      try { localStorage.setItem('lb-activeList', id); } catch(e) {}
+      if (fbReady) attachItemsListener(id);
+      selectedStore = 'Alle';
+      /* switch to list tab */
+      const listBtn = document.querySelector('.tab-btn');
+      switchTab('list', listBtn);
+      const list = allLists.find(l => l.id === id);
+      showToast((list ? list.name : 'Liste') + ' geöffnet');
     }
 
     /* ── Theme ── */
@@ -965,10 +1004,12 @@
       const total  = visible.length;
       const pct    = total ? Math.round(done / total * 100) : 0;
 
-      /* hero update (always uses full list for overall progress) */
+      /* hero update */
       const allDone  = items.filter(i => i.done).length;
       const allTotal = items.length;
       const allPct   = allTotal ? Math.round(allDone / allTotal * 100) : 0;
+      const activeList = allLists.find(l => l.id === activeListId);
+      document.querySelector('.hero-eyebrow').textContent = activeList ? activeList.name : 'Wocheneinkauf';
       document.querySelector('.hero-sub').textContent =
         allTotal ? `${allDone} von ${allTotal} Artikeln erledigt` : 'Liste ist leer';
       document.querySelector('.hero-progress-fill').style.width = allPct + '%';
@@ -1177,7 +1218,7 @@
       const active = document.getElementById(SCREENS[tab]);
       if (active) active.style.display = 'block';
       if (tab === 'budget') updateBudgetScreen();
-      if (tab === 'lists')  updateListsCard();
+      if (tab === 'lists')  renderListsScreen();
     }
 
     /* ── Budget screen update ── */
@@ -1225,15 +1266,85 @@
       }).join('');
     }
 
-    /* ── Lists card update ── */
-    function updateListsCard() {
-      const done  = items.filter(i => i.done).length;
-      const total = items.length;
-      const pct   = total ? Math.round(done / total * 100) : 0;
-      const sub   = document.getElementById('list-card-sub');
-      const bar   = document.getElementById('list-card-bar');
-      if (sub) sub.textContent = total ? `${done} von ${total} erledigt` : 'Noch keine Artikel';
-      if (bar) bar.style.width = pct + '%';
+    /* ── Lists screen ── */
+    function renderListsScreen() {
+      const el = document.getElementById('lists-content');
+      if (!el) return;
+      if (!allLists.length) {
+        el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">Keine Listen</div></div>';
+        return;
+      }
+      el.innerHTML = allLists.map(list => {
+        const pct     = list.total ? Math.round(list.done / list.total * 100) : 0;
+        const isActive = list.id === activeListId;
+        return `<div class="cat-card slide-up" style="margin-bottom:10px;cursor:pointer" onclick="setActiveList('${list.id}')">
+          <div style="padding:16px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:${list.total ? '10px' : '0'}">
+              <div style="width:38px;height:38px;border-radius:12px;background:${list.accent};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🛒</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:15px;font-weight:700;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(list.name)}</div>
+                <div style="font-size:12px;color:var(--text-3)">${list.total ? `${list.done} von ${list.total} erledigt` : 'Noch keine Artikel'}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+                ${isActive ? `<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:${list.accent};background:${list.accent}22;padding:3px 8px;border-radius:99px">Aktiv</span>` : ''}
+                ${list.id !== 'wocheneinkauf' ? `<button onclick="event.stopPropagation();deleteList('${list.id}','${esc(list.name)}')" style="background:none;border:none;cursor:pointer;color:var(--text-3);padding:4px;opacity:0.5" aria-label="Löschen">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                    <path d="M10 11v6m4-6v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                  </svg>
+                </button>` : ''}
+              </div>
+            </div>
+            ${list.total ? `<div style="background:var(--surface);border-radius:99px;height:4px;overflow:hidden">
+              <div style="height:100%;width:${pct}%;background:${list.accent};border-radius:99px;transition:width 0.4s ease"></div>
+            </div>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    /* ── New List Modal ── */
+    let newListAccent = '#10b981';
+    function openNewList() {
+      document.getElementById('newlist-name').value = '';
+      newListAccent = '#10b981';
+      document.querySelectorAll('.accent-dot').forEach(d => {
+        const active = d.dataset.accent === newListAccent;
+        d.style.outline = active ? '3px solid var(--card)' : 'none';
+        d.style.outlineOffset = active ? '1px' : '0';
+        d.style.border = active ? `3px solid ${d.dataset.accent}` : '3px solid transparent';
+      });
+      document.getElementById('newlist-modal').style.display = 'block';
+      setTimeout(() => document.getElementById('newlist-name').focus(), 80);
+    }
+    function closeNewListIfBg(e) {
+      if (e.target === document.getElementById('newlist-modal'))
+        document.getElementById('newlist-modal').style.display = 'none';
+    }
+    function pickAccent(el) {
+      newListAccent = el.dataset.accent;
+      document.querySelectorAll('.accent-dot').forEach(d => {
+        const active = d.dataset.accent === newListAccent;
+        d.style.outline = active ? '3px solid var(--card)' : 'none';
+        d.style.outlineOffset = active ? '1px' : '0';
+        d.style.border = active ? `3px solid ${d.dataset.accent}` : '3px solid transparent';
+      });
+    }
+    function confirmNewList() {
+      const name = document.getElementById('newlist-name').value.trim();
+      if (!name) { document.getElementById('newlist-name').focus(); return; }
+      const newId = 'list_' + Date.now();
+      if (fbReady) {
+        db.ref('lists/' + newId).set({ name, accent: newListAccent, createdAt: Date.now() });
+      }
+      document.getElementById('newlist-modal').style.display = 'none';
+      setActiveList(newId);
+    }
+    function deleteList(id, name) {
+      if (!confirm(`"${name}" wirklich löschen? Alle Artikel gehen verloren.`)) return;
+      if (fbReady) db.ref('lists/' + id).remove();
+      if (activeListId === id) setActiveList('wocheneinkauf');
+      showToast(name + ' gelöscht');
     }
 
     /* ── Add recipe ingredients to list ── */
