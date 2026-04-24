@@ -1,415 +1,717 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="fresh">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemeinsame Einkaufsliste</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        * { font-family: 'Inter', sans-serif; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Frisch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ── Theme Tokens ── */
+    :root, [data-theme="fresh"] {
+      --primary:        #10b981;
+      --primary-dark:   #059669;
+      --hero-from:      #059669;
+      --hero-to:        #10b981;
+      --surface:        #f4f6f5;
+      --card:           #ffffff;
+      --card-border:    rgba(0,0,0,0.07);
+      --text-1:         #0b1f17;
+      --text-2:         #4b7a66;
+      --text-3:         #8aaaa0;
+      --tab-bg:         #ffffff;
+    }
+    [data-theme="warm"] {
+      --primary:        #e06a3b;
+      --primary-dark:   #c2410c;
+      --hero-from:      #c2410c;
+      --hero-to:        #f97316;
+      --surface:        #faf5f0;
+      --card:           #ffffff;
+      --card-border:    rgba(0,0,0,0.07);
+      --text-1:         #1f0e05;
+      --text-2:         #7a4e3b;
+      --text-3:         #aa8a7a;
+      --tab-bg:         #ffffff;
+    }
+    [data-theme="dark"] {
+      --primary:        #4ade80;
+      --primary-dark:   #22c55e;
+      --hero-from:      #14532d;
+      --hero-to:        #166534;
+      --surface:        #141817;
+      --card:           #1c2220;
+      --card-border:    rgba(255,255,255,0.08);
+      --text-1:         #e8efec;
+      --text-2:         #7aa08a;
+      --text-3:         #4a6a5a;
+      --tab-bg:         #1c2220;
+    }
+    [data-theme="mono"] {
+      --primary:        #0a0a0a;
+      --primary-dark:   #000000;
+      --hero-from:      #0a0a0a;
+      --hero-to:        #1a1a1a;
+      --surface:        #f5f5f3;
+      --card:           #ffffff;
+      --card-border:    rgba(0,0,0,0.12);
+      --text-1:         #0a0a0a;
+      --text-2:         #4a4a4a;
+      --text-3:         #8a8a8a;
+      --tab-bg:         #ffffff;
+    }
 
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-8px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeOut {
-            from { opacity: 1; transform: scale(1); }
-            to   { opacity: 0; transform: scale(0.95); }
-        }
-        .slide-in { animation: slideIn 0.25s ease-out; }
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--surface);
+      color: var(--text-1);
+      height: 100%;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+      overflow-x: hidden;
+    }
 
-        .progress-bar-inner {
-            transition: width 0.4s ease;
-        }
+    /* ── App Shell ── */
+    #root {
+      max-width: 412px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
 
-        /* Checked item strikethrough animation */
-        .item-checked span.item-label {
-            text-decoration: line-through;
-            color: #9ca3af;
-        }
+    .screen {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-bottom: 80px;
+    }
 
-        /* Custom checkbox */
-        .check-btn {
-            min-width: 28px;
-            min-height: 28px;
-            border-radius: 50%;
-            border: 2px solid #d1d5db;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            background: white;
-        }
-        .check-btn.done {
-            background: #22c55e;
-            border-color: #22c55e;
-        }
-        .check-btn:hover:not(.done) {
-            border-color: #15803d;
-            background: #f0fdf4;
-        }
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(140deg, var(--hero-from) 0%, var(--hero-to) 100%);
+      color: #fff;
+      padding: 52px 20px 24px;
+      border-radius: 0 0 28px 28px;
+      margin-bottom: 16px;
+      position: relative;
+    }
 
-        /* Delete button */
-        .del-btn {
-            opacity: 0.4;
-            transition: opacity 0.15s, color 0.15s;
-        }
-        .del-btn:hover { opacity: 1; }
+    .hero-eyebrow {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      opacity: 0.7;
+      margin-bottom: 4px;
+    }
 
-        input:focus, select:focus {
-            outline: none;
-            border-color: #15803d !important;
-            box-shadow: 0 0 0 3px rgba(21,128,61,0.15);
-        }
-    </style>
+    .hero-title {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 2px;
+    }
+
+    .hero-sub {
+      font-size: 13px;
+      opacity: 0.75;
+      margin-bottom: 18px;
+    }
+
+    .hero-progress-bar {
+      height: 5px;
+      background: rgba(255,255,255,0.22);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+
+    .hero-progress-fill {
+      height: 100%;
+      background: rgba(255,255,255,0.85);
+      border-radius: 99px;
+      transition: width 0.5s ease;
+    }
+
+    .hero-progress-label {
+      font-size: 11px;
+      font-weight: 600;
+      opacity: 0.65;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Add Bar ── */
+    .add-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 16px 16px;
+      background: var(--card);
+      border: 1.5px solid var(--card-border);
+      border-radius: 18px;
+      padding: 10px 10px 10px 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .add-input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: var(--text-1);
+      font-family: inherit;
+      font-size: 15px;
+      outline: none;
+      min-width: 0;
+    }
+    .add-input::placeholder { color: var(--text-3); }
+
+    .add-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 0.12s, opacity 0.12s;
+    }
+    .add-btn:active { transform: scale(0.91); opacity: 0.85; }
+
+    /* ── Section Label ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-3);
+      margin: 0 20px 8px;
+    }
+
+    /* ── Category Card ── */
+    .cat-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      margin: 0 16px 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+
+    .cat-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px 12px;
+    }
+
+    .cat-emoji { font-size: 19px; line-height: 1; }
+
+    .cat-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-1);
+      flex: 1;
+    }
+
+    .cat-count {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-2);
+      background: var(--surface);
+      padding: 2px 9px;
+      border-radius: 99px;
+      border: 1px solid var(--card-border);
+    }
+
+    /* ── Item Row ── */
+    .item-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 16px;
+      border-top: 1px solid var(--card-border);
+      transition: background 0.12s;
+    }
+
+    .item-name {
+      flex: 1;
+      font-size: 15px;
+      color: var(--text-1);
+      line-height: 1.3;
+    }
+
+    .item-qty {
+      font-size: 13px;
+      color: var(--text-3);
+      margin-right: 4px;
+    }
+
+    .item-row.is-done .item-name {
+      text-decoration: line-through;
+      color: var(--text-3);
+    }
+
+    /* ── Checkbox ── */
+    .cb {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2px solid var(--card-border);
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: background 0.18s, border-color 0.18s, transform 0.18s;
+    }
+    .cb:hover { border-color: var(--primary); }
+    .cb.checked {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+    .cb.checked svg { opacity: 1; }
+    .cb svg { opacity: 0; transition: opacity 0.15s; }
+
+    /* ── Empty State ── */
+    .empty {
+      text-align: center;
+      padding: 60px 24px 40px;
+      color: var(--text-3);
+    }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-title { font-size: 17px; font-weight: 600; color: var(--text-2); margin-bottom: 4px; }
+    .empty-sub { font-size: 14px; }
+
+    /* ── Bottom Tabs ── */
+    .bottom-tabs {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 412px;
+      background: var(--tab-bg);
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      padding: 6px 0;
+      padding-bottom: max(6px, env(safe-area-inset-bottom));
+      z-index: 200;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .tab-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 6px 0;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--text-3);
+      transition: color 0.15s;
+      min-height: 44px;
+      justify-content: center;
+    }
+    .tab-btn.active { color: var(--primary); }
+    .tab-btn.active .tab-dot { opacity: 1; }
+
+    .tab-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .tab-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--primary);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%) translateY(0);
+      background: var(--text-1);
+      color: var(--surface);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 10px 18px;
+      border-radius: 99px;
+      z-index: 300;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-4px);
+    }
+
+    /* ── Category Picker ── */
+    .cat-picker {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 0 16px 14px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .cat-picker::-webkit-scrollbar { display: none; }
+
+    .cat-chip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      border-radius: 99px;
+      border: 1.5px solid var(--card-border);
+      background: var(--card);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-2);
+      white-space: nowrap;
+      cursor: pointer;
+      transition: border-color 0.12s, color 0.12s, background 0.12s;
+      flex-shrink: 0;
+    }
+    .cat-chip.selected {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: color-mix(in srgb, var(--primary) 8%, var(--card));
+    }
+
+    /* ── Animations ── */
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .slide-up {
+      animation: slideUp 0.28s cubic-bezier(.2,.9,.3,1.1) both;
+    }
+
+    @keyframes checkPop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.3); }
+      70%  { transform: scale(0.92); }
+      100% { transform: scale(1); }
+    }
+    .cb.pop { animation: checkPop 0.22s ease; }
+
+    /* ── Theme Switcher (dev helper) ── */
+    .theme-row {
+      display: flex;
+      gap: 8px;
+      padding: 4px 16px 16px;
+    }
+    .theme-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2.5px solid transparent;
+      cursor: pointer;
+      transition: transform 0.12s, border-color 0.12s;
+    }
+    .theme-dot:hover { transform: scale(1.15); }
+    .theme-dot.active { border-color: var(--text-1); }
+    .theme-dot[data-t="fresh"]  { background: linear-gradient(135deg, #059669, #10b981); }
+    .theme-dot[data-t="warm"]   { background: linear-gradient(135deg, #c2410c, #f97316); }
+    .theme-dot[data-t="dark"]   { background: linear-gradient(135deg, #14532d, #1a2e1a); }
+    .theme-dot[data-t="mono"]   { background: linear-gradient(135deg, #0a0a0a, #4a4a4a); }
+  </style>
 </head>
-<body class="bg-gradient-to-br from-slate-100 to-green-100 min-h-screen">
-    <!-- Static file input – lives outside #app so it survives re-renders -->
-    <input type="file" id="importFileInput" accept=".txt,.md" style="display:none">
-    <div id="app"></div>
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyA-RmYmwYU7FbcQ0zpbkRUPzMYTghF73TQ",
-            authDomain: "einkaufsliste-ff784.firebaseapp.com",
-            databaseURL: "https://einkaufsliste-ff784-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "einkaufsliste-ff784",
-            storageBucket: "einkaufsliste-ff784.firebasestorage.app",
-            messagingSenderId: "616070619611",
-            appId: "1:616070619611:web:91fd3bc488294fc48747fe"
-        };
+<body>
+  <div id="root">
+    <div class="screen" id="screen-list">
 
-        let database, itemsRef, isConfigured = false;
-        try {
-            firebase.initializeApp(firebaseConfig);
-            database = firebase.database();
-            itemsRef = database.ref('shoppingItems');
-            isConfigured = true;
-        } catch (error) {
-            console.error("Firebase Fehler:", error);
-        }
+      <!-- Hero -->
+      <div class="hero">
+        <div class="hero-eyebrow">Wocheneinkauf</div>
+        <div class="hero-title">Frisch</div>
+        <div class="hero-sub">3 von 12 Artikeln erledigt</div>
+        <div class="hero-progress-bar">
+          <div class="hero-progress-fill" style="width:25%"></div>
+        </div>
+        <div class="hero-progress-label">25% fertig</div>
+      </div>
 
-        const categoryMeta = {
-            'Allgemein':      { icon: '🧺', color: 'bg-gray-100 text-gray-600' },
-            'Obst & Gemüse':  { icon: '🥦', color: 'bg-green-100 text-green-700' },
-            'Milchprodukte':  { icon: '🥛', color: 'bg-blue-100 text-blue-700' },
-            'Fleisch & Fisch':{ icon: '🥩', color: 'bg-red-100 text-red-700' },
-            'Backwaren':      { icon: '🍞', color: 'bg-yellow-100 text-yellow-700' },
-            'Getränke':       { icon: '🧃', color: 'bg-cyan-100 text-cyan-700' },
-            'Haushalt':       { icon: '🧹', color: 'bg-purple-100 text-purple-700' },
-            'Sonstiges':      { icon: '📦', color: 'bg-orange-100 text-orange-700' },
-        };
-        const categories = Object.keys(categoryMeta);
+      <!-- Theme dots (dev helper) -->
+      <div class="theme-row">
+        <div class="theme-dot active" data-t="fresh"  onclick="setTheme('fresh')"></div>
+        <div class="theme-dot"        data-t="warm"   onclick="setTheme('warm')"></div>
+        <div class="theme-dot"        data-t="dark"   onclick="setTheme('dark')"></div>
+        <div class="theme-dot"        data-t="mono"   onclick="setTheme('mono')"></div>
+      </div>
 
-        let items = [], newItemName = '', selectedCategory = 'Allgemein';
+      <!-- Add bar -->
+      <div class="add-bar">
+        <input class="add-input" id="add-input" placeholder="Artikel hinzufügen …" type="text" autocomplete="off">
+        <button class="add-btn" onclick="handleAdd()" aria-label="Hinzufügen">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+      </div>
 
-        function initializeFirebaseListener() {
-            if (!isConfigured) return;
-            itemsRef.on('value', function(snapshot) {
-                var data = snapshot.val();
-                items = data ? Object.keys(data).map(function(key) { return data[key]; }) : [];
-                render();
-            });
-        }
+      <!-- Category picker -->
+      <div class="cat-picker" id="cat-picker">
+        <div class="cat-chip selected" data-cat="Allgemein"      onclick="selectCat(this)">🧺 Allgemein</div>
+        <div class="cat-chip"          data-cat="Obst &amp; Gemüse" onclick="selectCat(this)">🥦 Obst &amp; Gemüse</div>
+        <div class="cat-chip"          data-cat="Milchprodukte"  onclick="selectCat(this)">🥛 Milch</div>
+        <div class="cat-chip"          data-cat="Brot &amp; Backwaren" onclick="selectCat(this)">🍞 Brot</div>
+        <div class="cat-chip"          data-cat="Fleisch &amp; Fisch"  onclick="selectCat(this)">🥩 Fleisch</div>
+        <div class="cat-chip"          data-cat="Getränke"       onclick="selectCat(this)">🧃 Getränke</div>
+        <div class="cat-chip"          data-cat="Tiefkühl"       onclick="selectCat(this)">❄️ Tiefkühl</div>
+        <div class="cat-chip"          data-cat="Drogerie"       onclick="selectCat(this)">🧴 Drogerie</div>
+        <div class="cat-chip"          data-cat="Haushalt"       onclick="selectCat(this)">🧹 Haushalt</div>
+        <div class="cat-chip"          data-cat="Snacks"         onclick="selectCat(this)">🍿 Snacks</div>
+      </div>
 
-        function addItem() {
-            if (!isConfigured || !newItemName.trim()) return;
-            var newItemObj = {
-                id: Date.now(),
-                name: newItemName.trim(),
-                category: selectedCategory,
-                checked: false,
-                addedAt: new Date().toISOString()
-            };
-            itemsRef.child(newItemObj.id.toString()).set(newItemObj);
-            newItemName = '';
-            render();
-        }
+      <!-- Item list -->
+      <div id="item-list">
+        <!-- rendered by JS -->
+      </div>
 
-        function toggleItem(id) {
-            if (!isConfigured) return;
-            var item = items.find(function(i) { return i.id === id; });
-            if (item) itemsRef.child(id.toString()).update({ checked: !item.checked });
-        }
+    </div><!-- /screen -->
 
-        function deleteItem(id) {
-            if (!isConfigured) return;
-            itemsRef.child(id.toString()).remove();
-        }
+    <!-- Bottom Tabs -->
+    <nav class="bottom-tabs">
+      <button class="tab-btn active" onclick="switchTab('list', this)">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
+        </svg>
+        <span class="tab-label">Liste</span>
+        <div class="tab-dot"></div>
+      </button>
+      <button class="tab-btn" onclick="switchTab('recipes', this)">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+        </svg>
+        <span class="tab-label">Rezepte</span>
+        <div class="tab-dot"></div>
+      </button>
+      <button class="tab-btn" onclick="switchTab('budget', this)">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+        </svg>
+        <span class="tab-label">Budget</span>
+        <div class="tab-dot"></div>
+      </button>
+      <button class="tab-btn" onclick="switchTab('lists', this)">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+          <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+        <span class="tab-label">Listen</span>
+        <div class="tab-dot"></div>
+      </button>
+    </nav>
+  </div>
 
-        function clearChecked() {
-            if (!isConfigured) return;
-            items.filter(function(item) { return item.checked; }).forEach(function(item) {
-                itemsRef.child(item.id.toString()).remove();
-            });
-        }
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
 
-        function groupItemsByCategory() {
-            var grouped = {};
-            // preserve defined category order
-            for (var k = 0; k < categories.length; k++) {
-                var cat = categories[k];
-                var catItems = items.filter(function(i) { return i.category === cat; });
-                if (catItems.length > 0) grouped[cat] = catItems;
-            }
-            // items with unknown categories
-            for (var i = 0; i < items.length; i++) {
-                var item = items[i];
-                if (!grouped[item.category]) grouped[item.category] = [];
-                if (!categories.includes(item.category)) grouped[item.category].push(item);
-            }
-            return grouped;
-        }
+  <script>
+    /* ── State ── */
+    const CATEGORIES = [
+      { key: 'Obst & Gemüse',    emoji: '🥦' },
+      { key: 'Milchprodukte',    emoji: '🥛' },
+      { key: 'Brot & Backwaren', emoji: '🍞' },
+      { key: 'Fleisch & Fisch',  emoji: '🥩' },
+      { key: 'Getränke',         emoji: '🧃' },
+      { key: 'Tiefkühl',         emoji: '❄️' },
+      { key: 'Drogerie',         emoji: '🧴' },
+      { key: 'Haushalt',         emoji: '🧹' },
+      { key: 'Snacks',           emoji: '🍿' },
+      { key: 'Allgemein',        emoji: '🧺' },
+    ];
 
-        function escapeHtml(str) {
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;');
-        }
+    let items = [
+      { id: 1, name: 'Tomaten', category: 'Obst & Gemüse', qty: '500g', done: false },
+      { id: 2, name: 'Äpfel',   category: 'Obst & Gemüse', qty: '1 kg', done: false },
+      { id: 3, name: 'Karotten', category: 'Obst & Gemüse', done: true },
+      { id: 4, name: 'Butter',  category: 'Milchprodukte', done: false },
+      { id: 5, name: 'Joghurt', category: 'Milchprodukte', qty: '500g', done: false },
+      { id: 6, name: 'Vollmilch', category: 'Milchprodukte', qty: '1 l', done: true },
+    ];
 
-        function render() {
-            var uncheckedCount = 0, checkedCount = 0;
-            for (var i = 0; i < items.length; i++) {
-                items[i].checked ? checkedCount++ : uncheckedCount++;
-            }
-            var totalCount = items.length;
-            var progressPct = totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0;
+    let nextId = 10;
+    let selectedCategory = 'Allgemein';
+    let currentTab = 'list';
 
-            var groupedItems = groupItemsByCategory();
+    /* ── Theme ── */
+    function setTheme(t) {
+      document.documentElement.setAttribute('data-theme', t);
+      document.querySelectorAll('.theme-dot').forEach(d => {
+        d.classList.toggle('active', d.dataset.t === t);
+      });
+    }
 
-            // --- category options ---
-            var categoriesHtml = '';
-            for (var i = 0; i < categories.length; i++) {
-                var meta = categoryMeta[categories[i]] || { icon: '📦' };
-                categoriesHtml += '<option value="' + categories[i] + '"' +
-                    (categories[i] === selectedCategory ? ' selected' : '') + '>' +
-                    meta.icon + ' ' + categories[i] + '</option>';
-            }
+    /* ── Category picker ── */
+    function selectCat(el) {
+      document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedCategory = el.dataset.cat;
+    }
 
-            // --- items list ---
-            var itemsListHtml = '';
-            var categoryKeys = Object.keys(groupedItems);
+    /* ── Add item ── */
+    function handleAdd() {
+      const input = document.getElementById('add-input');
+      const name = input.value.trim();
+      if (!name) { input.focus(); return; }
+      items.unshift({ id: nextId++, name, category: selectedCategory, done: false });
+      input.value = '';
+      renderList();
+      showToast(name + ' hinzugefügt');
+    }
 
-            if (categoryKeys.length === 0) {
-                itemsListHtml = '<div class="bg-white rounded-2xl shadow p-12 text-center">' +
-                    '<p class="text-5xl mb-3">🛒</p>' +
-                    '<p class="text-xl font-semibold text-gray-400">Die Liste ist leer</p>' +
-                    '<p class="text-sm text-gray-300 mt-1">Füge oben deinen ersten Artikel hinzu</p>' +
-                    '</div>';
-            } else {
-                for (var i = 0; i < categoryKeys.length; i++) {
-                    var cat = categoryKeys[i];
-                    var catItems = groupedItems[cat];
-                    var meta = categoryMeta[cat] || { icon: '📦', color: 'bg-gray-100 text-gray-600' };
+    /* ── Toggle done ── */
+    function toggleDone(id) {
+      const item = items.find(i => i.id === id);
+      if (!item) return;
+      item.done = !item.done;
+      renderList();
+    }
 
-                    itemsListHtml += '<div class="bg-white rounded-2xl shadow p-4 mb-3">';
-                    itemsListHtml += '<div class="flex items-center gap-2 mb-3">' +
-                        '<span class="text-xl">' + meta.icon + '</span>' +
-                        '<h3 class="font-semibold text-gray-700">' + escapeHtml(cat) + '</h3>' +
-                        '<span class="ml-auto text-xs font-medium ' + meta.color + ' px-2 py-0.5 rounded-full">' + catItems.length + '</span>' +
-                        '</div>';
-                    itemsListHtml += '<div class="space-y-2">';
+    /* ── Delete item ── */
+    function deleteItem(id) {
+      items = items.filter(i => i.id !== id);
+      renderList();
+    }
 
-                    for (var j = 0; j < catItems.length; j++) {
-                        var item = catItems[j];
-                        var isChecked = item.checked;
-                        itemsListHtml += '<div class="flex items-center gap-3 px-3 py-2.5 rounded-xl ' +
-                            (isChecked ? 'bg-gray-50' : 'bg-green-50') + ' slide-in">';
+    /* ── Render ── */
+    function esc(s) {
+      return String(s)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
 
-                        // Delete button (left)
-                        itemsListHtml += '<button onclick="deleteItem(' + item.id + ')" ' +
-                            'class="del-btn text-red-400 hover:text-red-600 p-1.5 rounded-lg" title="Löschen">' +
-                            '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
-                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" ' +
-                            'd="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>' +
-                            '</svg></button>';
+    function renderList() {
+      const el = document.getElementById('item-list');
+      const done   = items.filter(i => i.done).length;
+      const total  = items.length;
+      const pct    = total ? Math.round(done / total * 100) : 0;
 
-                        // Item name
-                        itemsListHtml += '<span class="item-label flex-1 text-base ' +
-                            (isChecked ? 'line-through text-gray-400' : 'text-gray-800') + '">' +
-                            escapeHtml(item.name) + '</span>';
+      /* hero update */
+      document.querySelector('.hero-sub').textContent =
+        total ? `${done} von ${total} Artikeln erledigt` : 'Liste ist leer';
+      document.querySelector('.hero-progress-fill').style.width = pct + '%';
+      document.querySelector('.hero-progress-label').textContent = pct + '% fertig';
 
-                        // Checkbox button (right)
-                        itemsListHtml += '<button onclick="toggleItem(' + item.id + ')" class="check-btn' + (isChecked ? ' done' : '') + '">';
-                        if (isChecked) {
-                            itemsListHtml += '<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
-                                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>';
-                        }
-                        itemsListHtml += '</button>';
+      if (!total) {
+        el.innerHTML = `<div class="empty">
+          <div class="empty-icon">🛒</div>
+          <div class="empty-title">Liste ist leer</div>
+          <div class="empty-sub">Füge oben deinen ersten Artikel hinzu</div>
+        </div>`;
+        return;
+      }
 
-                        itemsListHtml += '</div>';
-                    }
-                    itemsListHtml += '</div></div>';
-                }
+      /* group by category in fixed order */
+      const grouped = {};
+      CATEGORIES.forEach(c => {
+        const rows = items.filter(i => i.category === c.key);
+        if (rows.length) grouped[c.key] = { emoji: c.emoji, rows };
+      });
+      /* unknown categories */
+      items.forEach(i => {
+        if (!grouped[i.category]) grouped[i.category] = { emoji: '🧺', rows: [] };
+        if (!CATEGORIES.find(c => c.key === i.category)) grouped[i.category].rows.push(i);
+      });
 
-                if (checkedCount > 0) {
-                    itemsListHtml += '<button onclick="clearChecked()" ' +
-                        'class="w-full flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-500 border border-red-200 py-3 rounded-xl font-medium transition-colors">' +
-                        '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
-                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>' +
-                        'Erledigte löschen (' + checkedCount + ')</button>';
-                }
-            }
-
-            // --- progress bar ---
-            var progressHtml = '';
-            if (totalCount > 0) {
-                progressHtml = '<div class="mt-4">' +
-                    '<div class="flex justify-between text-xs text-gray-400 mb-1">' +
-                    '<span>' + checkedCount + ' von ' + totalCount + ' erledigt</span>' +
-                    '<span>' + progressPct + '%</span></div>' +
-                    '<div class="w-full bg-gray-100 rounded-full h-2">' +
-                    '<div class="progress-bar-inner bg-gradient-to-r from-green-600 to-green-400 h-2 rounded-full" style="width:' + progressPct + '%"></div>' +
-                    '</div></div>';
-            }
-
-            // --- status dot ---
-            var statusDot = isConfigured
-                ? '<span class="flex items-center gap-1.5 text-xs text-green-600 font-medium">' +
-                  '<span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span>Online & synchronisiert</span>'
-                : '<span class="flex items-center gap-1.5 text-xs text-red-500 font-medium">' +
-                  '<span class="w-2 h-2 rounded-full bg-red-500 inline-block"></span>Offline</span>';
-
-            // --- full render ---
-            document.getElementById('app').innerHTML =
-                '<div class="max-w-lg mx-auto px-4 py-6">' +
-
-                // Header
-                '<div class="bg-gradient-to-r from-green-700 to-green-500 rounded-2xl shadow-lg p-6 mb-4 text-white">' +
-                '<div class="flex items-start justify-between">' +
-                '<div><h1 class="text-2xl font-bold mb-0.5">Einkaufsliste</h1>' +
-                statusDot + '</div>' +
-                '<span class="text-4xl">🛒</span></div>' +
-                progressHtml +
-                '</div>' +
-
-                // Add item card
-                '<div class="bg-white rounded-2xl shadow p-4 mb-4">' +
-                '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Artikel hinzufügen</p>' +
-                '<input type="text" id="newItemInput" placeholder="z.B. Milch, Brot, Äpfel …" value="' + escapeHtml(newItemName) + '" ' +
-                'class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl text-gray-800 placeholder-gray-300 mb-3 transition-all">' +
-                '<div class="flex gap-2">' +
-                '<select id="categorySelect" class="flex-1 px-3 py-3 border-2 border-gray-100 rounded-xl text-gray-700 bg-white transition-all">' + categoriesHtml + '</select>' +
-                '<button onclick="addItem()" ' +
-                'class="bg-green-700 hover:bg-green-800 active:bg-green-900 text-white px-5 py-3 rounded-xl font-semibold transition-colors flex items-center gap-1.5">' +
-                '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
-                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>' +
-                'Hinzufügen</button></div>' +
-                // Import button
-                '<div class="border-t border-gray-100 mt-4 pt-4">' +
-                '<button onclick="document.getElementById(\'importFileInput\').click()" ' +
-                'class="w-full flex items-center justify-center gap-2 bg-green-700 hover:bg-green-800 active:bg-green-900 text-white py-3 rounded-xl font-semibold transition-colors">' +
-                '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
-                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>' +
-                'Meine Liste importieren</button>' +
-                '</div></div>' +
-
-                // Items list
-                '<div>' + itemsListHtml + '</div>' +
-                '</div>';
-
-            var input = document.getElementById('newItemInput');
-            if (input) {
-                input.addEventListener('input', function(e) { newItemName = e.target.value; });
-                input.addEventListener('keypress', function(e) { if (e.key === 'Enter') addItem(); });
-            }
-            var select = document.getElementById('categorySelect');
-            if (select) {
-                select.addEventListener('change', function(e) { selectedCategory = e.target.value; });
-            }
-        }
-
-        // --- Auto-categorisation keyword map ---
-        var categoryKeywords = {
-            'Obst & Gemüse': [
-                'kartoffel', 'zwiebel', 'knoblauch', 'paprika', 'karotte', 'zucchini',
-                'brokkoli', 'kraut', 'salat', 'gurke', 'tomate', 'beere', 'beeren',
-                'tk-spinat', 'tk spinat', 'spinat', 'tk-gemüse', 'tk gemüse',
-                'apfel', 'birne', 'banane', 'orange', 'zitrone', 'erdbeere', 'himbeere'
-            ],
-            'Backwaren': [
-                'brot', 'wrap', 'wraps', 'brötchen', 'toast', 'semmel', 'gebäck'
-            ],
-            'Milchprodukte': [
-                'sojaskyr', 'sojajoghurt', 'joghurt', 'milch', 'käse', 'butter',
-                'quark', 'sahne', 'oatly', 'hafermilch', 'mandelmilch'
-            ],
-            'Sonstiges': [
-                'tofu', 'edamame', 'sojagranulat', 'seitan',
-                'kichererbse', 'kidneybohne', 'linse', 'bohne',
-                'reis', 'haferflocken', 'pasta', 'nudel',
-                'passata', 'currypaste', 'kokosmilch', 'hummus',
-                'sojasauce', 'gewürz', 'gewürze', 'salz', 'pfeffer', 'öl'
-            ]
-        };
-
-        function guessCategory(name) {
-            var lower = name.toLowerCase();
-            var catOrder = ['Obst & Gemüse', 'Backwaren', 'Milchprodukte', 'Sonstiges'];
-            for (var c = 0; c < catOrder.length; c++) {
-                var cat = catOrder[c];
-                var keywords = categoryKeywords[cat];
-                for (var k = 0; k < keywords.length; k++) {
-                    if (lower.indexOf(keywords[k]) !== -1) return cat;
-                }
-            }
-            return 'Allgemein';
-        }
-
-        function parseAndImport(text) {
-            if (!isConfigured) return;
-            var lines = text.split('\n');
-            var count = 0;
-            var baseTs = Date.now();
-
-            for (var i = 0; i < lines.length; i++) {
-                var line = lines[i].trim();
-                if (!line) continue;
-                // Skip store-name lines (all-uppercase words like "HOFER", "BILLA")
-                if (/^[A-ZÄÖÜ][A-ZÄÖÜ\s&]+$/.test(line)) continue;
-                // Only process list items starting with "- "
-                if (line.indexOf('- ') !== 0) continue;
-
-                var name = line.slice(2).trim();
-                if (!name) continue;
-
-                var newItemObj = {
-                    id: baseTs + i,          // unique per line within the same import
-                    name: name,
-                    category: guessCategory(name),
-                    checked: false,
-                    addedAt: new Date().toISOString()
-                };
-                itemsRef.child(newItemObj.id.toString()).set(newItemObj);
-                count++;
-            }
-            return count;
-        }
-
-        // Wire up the static file input once
-        document.getElementById('importFileInput').addEventListener('change', function(e) {
-            var file = e.target.files[0];
-            if (!file) return;
-            var reader = new FileReader();
-            reader.onload = function(ev) {
-                var count = parseAndImport(ev.target.result);
-                alert(count + ' Artikel erfolgreich importiert!');
-            };
-            reader.readAsText(file, 'UTF-8');
-            // Reset so the same file can be imported again if needed
-            e.target.value = '';
+      let html = '';
+      Object.entries(grouped).forEach(([cat, { emoji, rows }], idx) => {
+        const delay = idx * 40;
+        html += `<div class="cat-card slide-up" style="animation-delay:${delay}ms">
+          <div class="cat-header">
+            <span class="cat-emoji">${emoji}</span>
+            <span class="cat-name">${esc(cat)}</span>
+            <span class="cat-count">${rows.length}</span>
+          </div>`;
+        rows.forEach(item => {
+          html += `<div class="item-row${item.done ? ' is-done' : ''}" data-id="${item.id}">
+            <div class="cb${item.done ? ' checked' : ''}" onclick="toggleDone(${item.id})" role="checkbox" aria-checked="${item.done}" tabindex="0">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            ${item.qty ? `<span class="item-qty">${esc(item.qty)}</span>` : ''}
+            <span class="item-name">${esc(item.name)}</span>
+            <button onclick="deleteItem(${item.id})" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--text-3);opacity:0.6;transition:opacity 0.1s" aria-label="Löschen">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6m4-6v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+              </svg>
+            </button>
+          </div>`;
         });
+        html += '</div>';
+      });
 
-        if (isConfigured) {
-            initializeFirebaseListener();
-        } else {
-            render();
-        }
-    </script>
+      /* clear done button */
+      if (done > 0) {
+        html += `<div style="margin:4px 16px 16px;text-align:center">
+          <button onclick="clearDone()" style="background:none;border:1.5px solid var(--card-border);border-radius:12px;padding:10px 20px;font-size:13px;font-weight:600;color:var(--text-3);cursor:pointer;font-family:inherit;transition:border-color 0.12s,color 0.12s">
+            Erledigte löschen (${done})
+          </button>
+        </div>`;
+      }
+
+      el.innerHTML = html;
+    }
+
+    function clearDone() {
+      items = items.filter(i => !i.done);
+      renderList();
+    }
+
+    /* ── Tab switch ── */
+    function switchTab(tab, btn) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      /* placeholder: only list screen is built */
+    }
+
+    /* ── Toast ── */
+    let toastTimer;
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    /* ── Keyboard shortcut ── */
+    document.getElementById('add-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleAdd();
+    });
+
+    /* ── Init ── */
+    renderList();
+  </script>
 </body>
 </html>
