@@ -9,6 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   <style>
     /* ── Theme Tokens ── */
     :root, [data-theme="fresh"] {
@@ -456,6 +458,10 @@
           <div class="hero-progress-fill" style="width:25%"></div>
         </div>
         <div class="hero-progress-label">25% fertig</div>
+        <div id="hero-status" style="margin-top:12px;display:flex;align-items:center;gap:6px;opacity:0.65">
+          <span id="status-dot" style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.5);display:inline-block"></span>
+          <span id="status-text" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Verbinde …</span>
+        </div>
       </div>
 
       <!-- Theme dots (dev helper) -->
@@ -549,18 +555,53 @@
       { key: 'Allgemein',        emoji: '🧺' },
     ];
 
-    let items = [
-      { id: 1, name: 'Tomaten', category: 'Obst & Gemüse', qty: '500g', done: false },
-      { id: 2, name: 'Äpfel',   category: 'Obst & Gemüse', qty: '1 kg', done: false },
-      { id: 3, name: 'Karotten', category: 'Obst & Gemüse', done: true },
-      { id: 4, name: 'Butter',  category: 'Milchprodukte', done: false },
-      { id: 5, name: 'Joghurt', category: 'Milchprodukte', qty: '500g', done: false },
-      { id: 6, name: 'Vollmilch', category: 'Milchprodukte', qty: '1 l', done: true },
-    ];
+    /* ── Firebase ── */
+    const firebaseConfig = {
+      apiKey:            "AIzaSyBvNIBlsUlLfMksyYvSHA3p7aYskH90lRo",
+      authDomain:        "einkaufslisten-app-3.firebaseapp.com",
+      databaseURL:       "https://einkaufslisten-app-3-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId:         "einkaufslisten-app-3",
+      storageBucket:     "einkaufslisten-app-3.firebasestorage.app",
+      messagingSenderId: "990532694118",
+      appId:             "1:990532694118:web:dc122f2f1c4595930cbda7",
+    };
 
-    let nextId = 10;
+    let db, itemsRef, fbReady = false;
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db       = firebase.database();
+      itemsRef = db.ref('lists/wocheneinkauf/items');
+      fbReady  = true;
+    } catch(e) { console.error('Firebase init:', e); }
+
+    let items = [];
     let selectedCategory = 'Allgemein';
     let currentTab = 'list';
+
+    function setStatus(online) {
+      const dot  = document.getElementById('status-dot');
+      const text = document.getElementById('status-text');
+      if (!dot) return;
+      dot.style.background  = online ? 'rgba(255,255,255,0.9)' : 'rgba(255,100,100,0.8)';
+      text.textContent      = online ? 'Online' : 'Offline';
+    }
+
+    if (fbReady) {
+      /* live connection indicator */
+      db.ref('.info/connected').on('value', snap => setStatus(!!snap.val()));
+
+      /* live data */
+      itemsRef.on('value', snap => {
+        const val = snap.val();
+        items = val
+          ? Object.entries(val).map(([id, d]) => ({ id, ...d }))
+          : [];
+        renderList();
+      });
+    } else {
+      setStatus(false);
+      renderList();
+    }
 
     /* ── Theme ── */
     function setTheme(t) {
@@ -582,9 +623,14 @@
       const input = document.getElementById('add-input');
       const name = input.value.trim();
       if (!name) { input.focus(); return; }
-      items.unshift({ id: nextId++, name, category: selectedCategory, done: false });
+      const newItem = { name, category: selectedCategory, done: false, createdAt: Date.now() };
+      if (fbReady) {
+        itemsRef.push(newItem);
+      } else {
+        items.unshift({ id: '_' + Date.now(), ...newItem });
+        renderList();
+      }
       input.value = '';
-      renderList();
       showToast(name + ' hinzugefügt');
     }
 
@@ -592,14 +638,22 @@
     function toggleDone(id) {
       const item = items.find(i => i.id === id);
       if (!item) return;
-      item.done = !item.done;
-      renderList();
+      if (fbReady) {
+        itemsRef.child(id).update({ done: !item.done });
+      } else {
+        item.done = !item.done;
+        renderList();
+      }
     }
 
     /* ── Delete item ── */
     function deleteItem(id) {
-      items = items.filter(i => i.id !== id);
-      renderList();
+      if (fbReady) {
+        itemsRef.child(id).remove();
+      } else {
+        items = items.filter(i => i.id !== id);
+        renderList();
+      }
     }
 
     /* ── Render ── */
@@ -653,14 +707,14 @@
           </div>`;
         rows.forEach(item => {
           html += `<div class="item-row${item.done ? ' is-done' : ''}" data-id="${item.id}">
-            <div class="cb${item.done ? ' checked' : ''}" onclick="toggleDone(${item.id})" role="checkbox" aria-checked="${item.done}" tabindex="0">
+            <div class="cb${item.done ? ' checked' : ''}" onclick="toggleDone('${item.id}')" role="checkbox" aria-checked="${item.done}" tabindex="0">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
             </div>
             ${item.qty ? `<span class="item-qty">${esc(item.qty)}</span>` : ''}
             <span class="item-name">${esc(item.name)}</span>
-            <button onclick="deleteItem(${item.id})" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--text-3);opacity:0.6;transition:opacity 0.1s" aria-label="Löschen">
+            <button onclick="deleteItem('${item.id}')" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--text-3);opacity:0.6;transition:opacity 0.1s" aria-label="Löschen">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6m4-6v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
               </svg>
@@ -683,8 +737,14 @@
     }
 
     function clearDone() {
-      items = items.filter(i => !i.done);
-      renderList();
+      if (fbReady) {
+        const updates = {};
+        items.filter(i => i.done).forEach(i => { updates[i.id] = null; });
+        itemsRef.update(updates);
+      } else {
+        items = items.filter(i => !i.done);
+        renderList();
+      }
     }
 
     /* ── Tab switch ── */
@@ -710,8 +770,8 @@
       if (e.key === 'Enter') handleAdd();
     });
 
-    /* ── Init ── */
-    renderList();
+    /* Firebase listener calls renderList() automatically.
+       Fallback for offline mode is handled in the fbReady block above. */
   </script>
 </body>
 </html>
