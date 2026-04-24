@@ -1,6 +1,6 @@
 {
-  "name": "Frisch Einkaufsliste",
-  "short_name": "Frisch",
+  "name": "ListaBombastica",
+  "short_name": "ListaBombastica",
   "description": "Deine smarte Einkaufsliste – immer synchron",
   "start_url": "/einkaufslisteAPP3.0/",
   "scope": "/einkaufslisteAPP3.0/",
