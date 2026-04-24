@@ -475,6 +475,13 @@
         <div class="theme-dot"        data-t="mono"   onclick="setTheme('mono')"></div>
       </div>
 
+      <!-- Import link (above add bar) -->
+      <div style="text-align:right;margin:0 20px 6px">
+        <button onclick="openImport()" style="background:none;border:none;font-family:inherit;font-size:12px;font-weight:600;color:var(--text-3);cursor:pointer;padding:4px 0;transition:color 0.12s">
+          📥 Liste importieren
+        </button>
+      </div>
+
       <!-- Add bar -->
       <div class="add-bar">
         <input class="add-input" id="add-input" placeholder="Artikel hinzufügen …" type="text" autocomplete="off">
@@ -482,27 +489,6 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
-        </button>
-      </div>
-
-      <!-- Category picker -->
-      <div class="cat-picker" id="cat-picker">
-        <div class="cat-chip selected" data-cat="Allgemein"      onclick="selectCat(this)">🧺 Allgemein</div>
-        <div class="cat-chip"          data-cat="Obst &amp; Gemüse" onclick="selectCat(this)">🥦 Obst &amp; Gemüse</div>
-        <div class="cat-chip"          data-cat="Milchprodukte"  onclick="selectCat(this)">🥛 Milch</div>
-        <div class="cat-chip"          data-cat="Brot &amp; Backwaren" onclick="selectCat(this)">🍞 Brot</div>
-        <div class="cat-chip"          data-cat="Fleisch &amp; Fisch"  onclick="selectCat(this)">🥩 Fleisch</div>
-        <div class="cat-chip"          data-cat="Getränke"       onclick="selectCat(this)">🧃 Getränke</div>
-        <div class="cat-chip"          data-cat="Tiefkühl"       onclick="selectCat(this)">❄️ Tiefkühl</div>
-        <div class="cat-chip"          data-cat="Drogerie"       onclick="selectCat(this)">🧴 Drogerie</div>
-        <div class="cat-chip"          data-cat="Haushalt"       onclick="selectCat(this)">🧹 Haushalt</div>
-        <div class="cat-chip"          data-cat="Snacks"         onclick="selectCat(this)">🍿 Snacks</div>
-      </div>
-
-      <!-- Import link -->
-      <div style="text-align:right;margin:-4px 20px 8px">
-        <button onclick="openImport()" style="background:none;border:none;font-family:inherit;font-size:12px;font-weight:600;color:var(--text-3);cursor:pointer;padding:4px 0;transition:color 0.12s">
-          📥 Liste importieren
         </button>
       </div>
 
@@ -951,7 +937,7 @@
       const name = input.value.trim();
       if (!name) { input.focus(); return; }
       const store = (selectedStore === 'Alle') ? 'Sonstiges' : selectedStore;
-      const newItem = { name, category: selectedCategory, store, done: false, createdAt: Date.now() };
+      const newItem = { name, category: guessCategory(name), store, done: false, createdAt: Date.now() };
       if (fbReady) {
         itemsRef.push(newItem);
       } else {
