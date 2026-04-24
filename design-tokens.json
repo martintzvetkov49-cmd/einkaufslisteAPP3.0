@@ -1,0 +1,134 @@
+{
+  "meta": {
+    "name": "Frisch",
+    "version": "1.0",
+    "description": "Modernes Einkaufslisten-App Design System"
+  },
+  "themes": {
+    "fresh": {
+      "primary": "#10b981",
+      "primaryTint": "#d1fae5",
+      "primaryTintStrong": "#a7f3d0",
+      "heroBg": "linear-gradient(135deg, #059669 0%, #10b981 100%)",
+      "heroText": "#ffffff",
+      "heroBlob": "#6ee7b7",
+      "surface": "#f4f6f5",
+      "card": "#ffffff",
+      "text": "#0b1f17",
+      "muted": "#6b7875",
+      "border": "rgba(10,30,20,0.06)",
+      "chip": "#f1f4f2"
+    },
+    "warm": {
+      "primary": "#e06a3b",
+      "primaryTint": "#fde3d4",
+      "primaryTintStrong": "#fbc9b0",
+      "heroBg": "linear-gradient(135deg, #c2410c 0%, #f97316 100%)",
+      "heroText": "#ffffff",
+      "heroBlob": "#fdba74",
+      "surface": "#faf5f0",
+      "card": "#ffffff",
+      "text": "#1a0e06",
+      "muted": "#7a6557",
+      "border": "rgba(50,30,10,0.07)",
+      "chip": "#f5ece3"
+    },
+    "dark": {
+      "primary": "#4ade80",
+      "primaryTint": "rgba(74, 222, 128, 0.18)",
+      "primaryTintStrong": "#166534",
+      "heroBg": "linear-gradient(135deg, #14532d 0%, #166534 100%)",
+      "heroText": "#ffffff",
+      "heroBlob": "#22c55e",
+      "surface": "#141817",
+      "card": "#1c2220",
+      "text": "#e8efec",
+      "muted": "#8a9a93",
+      "border": "rgba(255,255,255,0.06)",
+      "chip": "#242b28"
+    },
+    "mono": {
+      "primary": "#0a0a0a",
+      "primaryTint": "#f0f0ee",
+      "primaryTintStrong": "#d4d4d2",
+      "heroBg": "#0a0a0a",
+      "heroText": "#ffffff",
+      "heroBlob": "#404040",
+      "surface": "#f5f5f3",
+      "card": "#ffffff",
+      "text": "#0a0a0a",
+      "muted": "#6b6b6b",
+      "border": "rgba(0,0,0,0.08)",
+      "chip": "#f0f0ee"
+    }
+  },
+  "typography": {
+    "fontFamily": "'Geist', 'Inter', system-ui, sans-serif",
+    "googleFontsImport": "https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap",
+    "scale": {
+      "hero": { "size": 26, "weight": 700, "letterSpacing": "-0.02em", "lineHeight": 1.1 },
+      "title": { "size": 24, "weight": 700, "letterSpacing": "-0.02em" },
+      "heading": { "size": 18, "weight": 700, "letterSpacing": "-0.02em" },
+      "subheading": { "size": 15, "weight": 600, "letterSpacing": "-0.01em" },
+      "body": { "size": 16, "weight": 500, "letterSpacing": "-0.01em" },
+      "bodySmall": { "size": 14, "weight": 500 },
+      "caption": { "size": 13, "weight": 600 },
+      "micro": { "size": 12, "weight": 600 },
+      "label": { "size": 11, "weight": 600, "letterSpacing": "0.05em", "textTransform": "uppercase" }
+    }
+  },
+  "spacing": {
+    "screenPadding": 16,
+    "cardPadding": [16, 20, 22],
+    "cardRadius": [14, 18, 20, 24, 28],
+    "chipRadius": 100,
+    "buttonRadius": 100,
+    "inputRadius": 14,
+    "gap": {
+      "tight": 6,
+      "default": 10,
+      "loose": 14,
+      "section": 16
+    }
+  },
+  "shadows": {
+    "card": "0 1px 2px rgba(10,30,20,0.04), 0 0 0 1px var(--border)",
+    "elevated": "0 8px 24px -8px rgba(10,30,20,0.12), 0 0 0 1px var(--border)",
+    "hero": "0 10px 30px -12px rgba(16,64,40,0.25)",
+    "fab": "0 6px 14px -4px var(--primary)",
+    "button": "0 6px 16px -6px var(--primary)",
+    "overlay": "0 20px 40px -10px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.06)"
+  },
+  "animations": {
+    "checkbox": { "duration": "0.18s", "easing": "ease" },
+    "collapse": { "duration": "0.3s", "easing": "ease" },
+    "progress": { "duration": "0.4s", "easing": "ease" },
+    "slideUp": { "duration": "0.28s", "easing": "cubic-bezier(.2,.9,.3,1.1)" },
+    "fadeIn": { "duration": "0.2s", "easing": "ease" },
+    "toast": { "duration": "0.25s", "easing": "ease", "displayTime": 2400 },
+    "swipeThreshold": 40
+  },
+  "categories": {
+    "Obst & Gemüse":    { "emoji": "🥬", "hue": 140, "color": "#4ade80" },
+    "Milchprodukte":    { "emoji": "🧀", "hue": 48,  "color": "#fbbf24" },
+    "Brot & Backwaren": { "emoji": "🥖", "hue": 30,  "color": "#f59e0b" },
+    "Fleisch & Fisch":  { "emoji": "🥩", "hue": 0,   "color": "#f87171" },
+    "Getränke":         { "emoji": "🥤", "hue": 200, "color": "#60a5fa" },
+    "Tiefkühl":         { "emoji": "🧊", "hue": 190, "color": "#67e8f9" },
+    "Drogerie":         { "emoji": "🧴", "hue": 280, "color": "#c084fc" },
+    "Haushalt":         { "emoji": "🧼", "hue": 220, "color": "#a78bfa" },
+    "Snacks":           { "emoji": "🍫", "hue": 20,  "color": "#fb923c" },
+    "Allgemein":        { "emoji": "🛒", "hue": 160, "color": "#10b981" }
+  },
+  "categoryKeywords": {
+    "Obst & Gemüse": ["banan", "apfel", "tomat", "salat", "gurke", "paprika", "kartoffel", "zwiebel", "knoblauch", "zitron", "orange", "avocado", "karotte", "möhre", "rucola", "basilikum", "petersilie", "koriander", "limette", "beere", "gemüse", "obst", "ananas", "mango", "spinat", "brokkoli"],
+    "Milchprodukte": ["milch", "käse", "joghurt", "butter", "sahne", "quark", "parmesan", "mozzarella", "feta", "ei", "eier"],
+    "Brot & Backwaren": ["brot", "brötchen", "toast", "baguette", "nudel", "pasta", "spaghetti", "mehl", "reis", "tortilla", "quinoa"],
+    "Fleisch & Fisch": ["fleisch", "hähnchen", "huhn", "rind", "schwein", "lachs", "fisch", "thunfisch", "schinken", "wurst", "salami", "hackfleisch"],
+    "Getränke": ["wasser", "saft", "cola", "bier", "wein", "tee", "kaffee", "sprudel", "limonade"],
+    "Tiefkühl": ["tiefkühl", "gefrier", "eis"],
+    "Drogerie": ["shampoo", "seife", "zahnpasta", "creme", "deo", "duschgel"],
+    "Haushalt": ["waschmittel", "spülmittel", "toilettenpapier", "küchenrolle", "müllbeutel", "putz"],
+    "Snacks": ["schokolade", "chips", "keks", "süß", "gumm", "riegel", "nuss"]
+  }
+}

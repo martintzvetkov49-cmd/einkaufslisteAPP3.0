@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Frisch – Einkaufsliste</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; font-family: 'Geist', 'Inter', system-ui, sans-serif; }
+  body {
+    background: #f4f4f2;
+    background-image:
+      radial-gradient(at 20% 20%, #e8f5ee 0%, transparent 50%),
+      radial-gradient(at 80% 80%, #f5efe6 0%, transparent 50%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    color: #0a0a0a;
+  }
+  #root { display: flex; justify-content: center; }
+
+  /* Theme: Fresh (default) */
+  .theme-fresh {
+    --primary: #10b981;
+    --primary-tint: #d1fae5;
+    --primary-tint-strong: #a7f3d0;
+    --hero-bg: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    --hero-text: #ffffff;
+    --hero-blob: #6ee7b7;
+    --surface: #f4f6f5;
+    --card: #ffffff;
+    --text: #0b1f17;
+    --muted: #6b7875;
+    --border: rgba(10,30,20,0.06);
+    --chip: #f1f4f2;
+  }
+  /* Theme: Warm (peach / cream) */
+  .theme-warm {
+    --primary: #e06a3b;
+    --primary-tint: #fde3d4;
+    --primary-tint-strong: #fbc9b0;
+    --hero-bg: linear-gradient(135deg, #c2410c 0%, #f97316 100%);
+    --hero-text: #ffffff;
+    --hero-blob: #fdba74;
+    --surface: #faf5f0;
+    --card: #ffffff;
+    --text: #1a0e06;
+    --muted: #7a6557;
+    --border: rgba(50,30,10,0.07);
+    --chip: #f5ece3;
+  }
+  /* Theme: Dark */
+  .theme-dark {
+    --primary: #4ade80;
+    --primary-tint: rgba(74, 222, 128, 0.18);
+    --primary-tint-strong: #166534;
+    --hero-bg: linear-gradient(135deg, #14532d 0%, #166534 100%);
+    --hero-text: #ffffff;
+    --hero-blob: #22c55e;
+    --surface: #141817;
+    --card: #1c2220;
+    --text: #e8efec;
+    --muted: #8a9a93;
+    --border: rgba(255,255,255,0.06);
+    --chip: #242b28;
+  }
+  /* Theme: Mono (editorial) */
+  .theme-mono {
+    --primary: #0a0a0a;
+    --primary-tint: #f0f0ee;
+    --primary-tint-strong: #d4d4d2;
+    --hero-bg: #0a0a0a;
+    --hero-text: #ffffff;
+    --hero-blob: #404040;
+    --surface: #f5f5f3;
+    --card: #ffffff;
+    --text: #0a0a0a;
+    --muted: #6b6b6b;
+    --border: rgba(0,0,0,0.08);
+    --chip: #f0f0ee;
+  }
+
+  .app-bg { background: var(--surface); transition: background 0.3s; }
+
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes toastIn {
+    from { transform: translate(-50%, 20px); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+  }
+
+  /* Hide scrollbars */
+  ::-webkit-scrollbar { display: none; }
+  * { scrollbar-width: none; }
+
+  /* Tweaks panel */
+  .tweaks {
+    position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+    background: white; border-radius: 18px;
+    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.06);
+    padding: 14px; width: 260px;
+    font-family: 'Geist', system-ui, sans-serif;
+    display: none;
+  }
+  .tweaks.on { display: block; }
+  .tweaks h3 {
+    margin: 0 0 10px; font-size: 13px; font-weight: 700; color: #0a0a0a;
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .tweak-label {
+    font-size: 11px; font-weight: 600; color: #6b6b6b;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    margin: 10px 0 6px;
+  }
+  .swatch-row { display: flex; gap: 6px; }
+  .swatch {
+    flex: 1; height: 36px; border-radius: 10px; border: 2px solid transparent;
+    cursor: pointer; transition: all 0.15s; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600;
+  }
+  .swatch.on { border-color: #0a0a0a; transform: scale(1.05); }
+  .seg { display: flex; background: #f0f0ee; border-radius: 10px; padding: 3px; }
+  .seg button {
+    flex: 1; padding: 6px 8px; border: none; background: transparent;
+    border-radius: 7px; font-size: 12px; font-weight: 600; color: #6b6b6b;
+    cursor: pointer; font-family: inherit;
+  }
+  .seg button.on { background: white; color: #0a0a0a; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<div class="tweaks" id="tweaks">
+  <h3>Tweaks</h3>
+  <div class="tweak-label">Theme</div>
+  <div class="swatch-row" id="theme-row"></div>
+  <div class="tweak-label">Dichte</div>
+  <div class="seg" id="density-seg">
+    <button data-v="comfortable" class="on">Geräumig</button>
+    <button data-v="compact">Kompakt</button>
+  </div>
+  <div class="tweak-label">Screen</div>
+  <div class="seg" id="screen-seg">
+    <button data-v="list" class="on">Liste</button>
+    <button data-v="recipes">Rezepte</button>
+    <button data-v="budget">Budget</button>
+    <button data-v="lists">Alle</button>
+  </div>
+</div>
+
+<script>
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "theme": "dark",
+    "density": "comfortable",
+    "screen": "list"
+  }/*EDITMODE-END*/;
+  window.__tweaks = { ...TWEAK_DEFAULTS };
+
+  // Edit mode protocol
+  window.addEventListener('message', (e) => {
+    if (!e.data) return;
+    if (e.data.type === '__activate_edit_mode') document.getElementById('tweaks').classList.add('on');
+    if (e.data.type === '__deactivate_edit_mode') document.getElementById('tweaks').classList.remove('on');
+  });
+  window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+
+  // Themes
+  const THEMES = [
+    { id: 'fresh', label: 'Grün',  bg: '#10b981', fg: '#fff' },
+    { id: 'warm',  label: 'Warm',  bg: '#f97316', fg: '#fff' },
+    { id: 'dark',  label: 'Dark',  bg: '#0b1513', fg: '#4ade80' },
+    { id: 'mono',  label: 'Mono',  bg: '#0a0a0a', fg: '#fff' },
+  ];
+  const themeRow = document.getElementById('theme-row');
+  THEMES.forEach(t => {
+    const b = document.createElement('button');
+    b.className = 'swatch' + (t.id === window.__tweaks.theme ? ' on' : '');
+    b.style.background = t.bg; b.style.color = t.fg;
+    b.dataset.v = t.id; b.textContent = t.label;
+    b.onclick = () => setTweak('theme', t.id);
+    themeRow.appendChild(b);
+  });
+  function bindSeg(id, key) {
+    document.querySelectorAll('#' + id + ' button').forEach(b => {
+      b.onclick = () => setTweak(key, b.dataset.v);
+    });
+  }
+  bindSeg('density-seg', 'density');
+  bindSeg('screen-seg', 'screen');
+
+  function setTweak(key, value) {
+    window.__tweaks[key] = value;
+    // Update button states
+    if (key === 'theme') {
+      document.querySelectorAll('#theme-row .swatch').forEach(b => b.classList.toggle('on', b.dataset.v === value));
+    } else {
+      const id = key + '-seg';
+      document.querySelectorAll('#' + id + ' button').forEach(b => b.classList.toggle('on', b.dataset.v === value));
+    }
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [key]: value } }, '*');
+    if (window.__applyTweaks) window.__applyTweaks(window.__tweaks);
+  }
+</script>
+
+<script type="text/babel" src="android-frame.jsx"></script>
+<script type="text/babel" src="components.jsx"></script>
+<script type="text/babel" src="import-modal.jsx"></script>
+<script type="text/babel" src="screens.jsx"></script>
+<script type="text/babel" src="screens2.jsx"></script>
+
+<script type="text/babel">
+  const SEED_ITEMS = [
+    { id: 'i1', name: 'Bio-Bananen', category: 'Obst & Gemüse', done: false, qty: '1 kg', price: 2.49 },
+    { id: 'i2', name: 'Avocado', category: 'Obst & Gemüse', done: false, qty: '2 Stück', price: 3.20 },
+    { id: 'i3', name: 'Rucola', category: 'Obst & Gemüse', done: true, qty: '100g', price: 1.89 },
+    { id: 'i4', name: 'Hafermilch', category: 'Milchprodukte', done: false, qty: '1L', price: 1.99 },
+    { id: 'i5', name: 'Griechischer Joghurt', category: 'Milchprodukte', done: false, qty: '500g', price: 2.79 },
+    { id: 'i6', name: 'Parmesan', category: 'Milchprodukte', done: true, qty: '100g', price: 3.49 },
+    { id: 'i7', name: 'Sauerteigbrot', category: 'Brot & Backwaren', done: false, price: 4.20 },
+    { id: 'i8', name: 'Lachsfilet', category: 'Fleisch & Fisch', done: false, qty: '300g', price: 8.90, note: 'Bio' },
+    { id: 'i9', name: 'Sprudelwasser', category: 'Getränke', done: false, qty: '6er', price: 3.99 },
+    { id: 'i10', name: 'Waschmittel', category: 'Haushalt', done: false, price: 6.49 },
+  ];
+
+  const COLLABS = [
+    { initial: 'M', color: '#10b981' },
+    { initial: 'L', color: '#f59e0b' },
+    { initial: 'T', color: '#8b5cf6' },
+  ];
+
+  function App() {
+    const [tweaks, setTweaks] = React.useState(window.__tweaks);
+    const [state, setState] = React.useState({
+      listName: 'Wocheneinkauf',
+      items: SEED_ITEMS,
+      collaborators: COLLABS,
+      budget: 80,
+    });
+    const [toast, setToast] = React.useState(null);
+
+    React.useEffect(() => {
+      window.__applyTweaks = (t) => setTweaks({ ...t });
+      return () => { window.__applyTweaks = null; };
+    }, []);
+
+    const screen = tweaks.screen || 'list';
+    const density = tweaks.density || 'comfortable';
+
+    const showToast = (msg) => {
+      setToast(msg);
+      setTimeout(() => setToast(null), 2400);
+    };
+
+    let content;
+    if (screen === 'list')    content = <ListScreen state={state} setState={setState} />;
+    else if (screen === 'recipes') content = <RecipesScreen state={state} setState={setState} onAddedToast={(n) => showToast(`${n} zur Liste hinzugefügt`)} />;
+    else if (screen === 'budget')  content = <BudgetScreen state={state} />;
+    else if (screen === 'lists')   content = <ListsScreen state={state} setState={setState} />;
+
+    return (
+      <div
+        data-screen-label={`01 ${screen}`}
+        className={`theme-${tweaks.theme} app-bg`}
+        style={{
+          width: 412,
+          height: 892,
+          borderRadius: 44,
+          overflow: 'hidden',
+          background: 'var(--surface)',
+          border: '10px solid #1c1c1c',
+          boxShadow: '0 40px 100px -20px rgba(0,0,0,0.35), 0 0 0 2px rgba(255,255,255,0.4)',
+          display: 'flex',
+          flexDirection: 'column',
+          fontFamily: "'Geist', 'Inter', system-ui, sans-serif",
+          position: 'relative',
+          fontSize: density === 'compact' ? 14 : 15,
+        }}
+      >
+        {/* Status bar */}
+        <div style={{
+          height: 36, display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', padding: '0 22px',
+          background: 'var(--surface)', flexShrink: 0, position: 'relative',
+          fontSize: 13, fontWeight: 600, color: 'var(--text)',
+        }}>
+          <span>9:30</span>
+          <div style={{
+            position: 'absolute', left: '50%', top: 10, transform: 'translateX(-50%)',
+            width: 22, height: 22, borderRadius: '50%', background: '#0a0a0a',
+          }} />
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zM5 13l2 2c2.76-2.76 7.24-2.76 10 0l2-2c-3.87-3.87-10.13-3.87-14 0zM9 17l3 3 3-3c-1.65-1.66-4.34-1.66-6 0z"/></svg>
+            <svg width="22" height="11" viewBox="0 0 28 14" fill="none"><rect x="1" y="1" width="22" height="12" rx="3" stroke="currentColor" strokeWidth="1.5"/><rect x="3" y="3" width="18" height="8" rx="1.5" fill="currentColor"/><rect x="24" y="5" width="2" height="4" rx="1" fill="currentColor"/></svg>
+          </div>
+        </div>
+
+        {/* Top bar */}
+        <div style={{
+          display: 'flex', alignItems: 'center', padding: '10px 16px 6px',
+          gap: 10, flexShrink: 0, background: 'var(--surface)',
+        }}>
+          <div style={{
+            width: 38, height: 38, borderRadius: 12,
+            background: 'var(--primary)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'white', fontSize: 18, fontWeight: 800,
+            letterSpacing: '-0.02em',
+          }}>f</div>
+          <div style={{ flex: 1 }}>
+            <div style={{
+              fontSize: 18, fontWeight: 700, color: 'var(--text)',
+              letterSpacing: '-0.02em', lineHeight: 1,
+            }}>Frisch</div>
+            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
+              Hallo Martin
+            </div>
+          </div>
+          <button style={{
+            width: 38, height: 38, borderRadius: '50%',
+            background: 'var(--card)', border: '1px solid var(--border)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'var(--muted)', cursor: 'pointer',
+          }}>{Icons.search}</button>
+          <button style={{
+            width: 38, height: 38, borderRadius: '50%',
+            background: 'var(--card)', border: '1px solid var(--border)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'var(--muted)', cursor: 'pointer',
+          }}>{Icons.users}</button>
+        </div>
+
+        {/* Scrollable content */}
+        <div style={{
+          flex: 1, overflowY: 'auto', overflowX: 'hidden',
+          position: 'relative',
+        }}>
+          {content}
+        </div>
+
+        {/* Bottom tabs */}
+        <BottomTabs active={screen} onChange={(id) => {
+          window.__tweaks.screen = id;
+          document.querySelectorAll('#screen-seg button').forEach(b => b.classList.toggle('on', b.dataset.v === id));
+          window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { screen: id } }, '*');
+          setTweaks({ ...window.__tweaks });
+        }} />
+
+        {/* Nav pill */}
+        <div style={{
+          height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'var(--card)', flexShrink: 0,
+        }}>
+          <div style={{
+            width: 120, height: 4, borderRadius: 2, background: 'var(--text)', opacity: 0.6,
+          }} />
+        </div>
+
+        {/* Toast */}
+        {toast && (
+          <div style={{
+            position: 'absolute', bottom: 120, left: '50%',
+            transform: 'translateX(-50%)',
+            background: '#0a0a0a', color: 'white',
+            padding: '10px 18px', borderRadius: 100,
+            fontSize: 13, fontWeight: 600,
+            boxShadow: '0 10px 30px -10px rgba(0,0,0,0.4)',
+            animation: 'toastIn 0.25s ease',
+            zIndex: 20,
+          }}>{toast}</div>
+        )}
+      </div>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
