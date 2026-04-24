@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemeinsame Einkaufsliste</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        * { font-family: 'Inter', sans-serif; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: scale(1); }
+            to   { opacity: 0; transform: scale(0.95); }
+        }
+        .slide-in { animation: slideIn 0.25s ease-out; }
+
+        .progress-bar-inner {
+            transition: width 0.4s ease;
+        }
+
+        /* Checked item strikethrough animation */
+        .item-checked span.item-label {
+            text-decoration: line-through;
+            color: #9ca3af;
+        }
+
+        /* Custom checkbox */
+        .check-btn {
+            min-width: 28px;
+            min-height: 28px;
+            border-radius: 50%;
+            border: 2px solid #d1d5db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            background: white;
+        }
+        .check-btn.done {
+            background: #22c55e;
+            border-color: #22c55e;
+        }
+        .check-btn:hover:not(.done) {
+            border-color: #15803d;
+            background: #f0fdf4;
+        }
+
+        /* Delete button */
+        .del-btn {
+            opacity: 0.4;
+            transition: opacity 0.15s, color 0.15s;
+        }
+        .del-btn:hover { opacity: 1; }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #15803d !important;
+            box-shadow: 0 0 0 3px rgba(21,128,61,0.15);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-100 to-green-100 min-h-screen">
+    <!-- Static file input – lives outside #app so it survives re-renders -->
+    <input type="file" id="importFileInput" accept=".txt,.md" style="display:none">
+    <div id="app"></div>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-RmYmwYU7FbcQ0zpbkRUPzMYTghF73TQ",
+            authDomain: "einkaufsliste-ff784.firebaseapp.com",
+            databaseURL: "https://einkaufsliste-ff784-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "einkaufsliste-ff784",
+            storageBucket: "einkaufsliste-ff784.firebasestorage.app",
+            messagingSenderId: "616070619611",
+            appId: "1:616070619611:web:91fd3bc488294fc48747fe"
+        };
+
+        let database, itemsRef, isConfigured = false;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+            itemsRef = database.ref('shoppingItems');
+            isConfigured = true;
+        } catch (error) {
+            console.error("Firebase Fehler:", error);
+        }
+
+        const categoryMeta = {
+            'Allgemein':      { icon: '🧺', color: 'bg-gray-100 text-gray-600' },
+            'Obst & Gemüse':  { icon: '🥦', color: 'bg-green-100 text-green-700' },
+            'Milchprodukte':  { icon: '🥛', color: 'bg-blue-100 text-blue-700' },
+            'Fleisch & Fisch':{ icon: '🥩', color: 'bg-red-100 text-red-700' },
+            'Backwaren':      { icon: '🍞', color: 'bg-yellow-100 text-yellow-700' },
+            'Getränke':       { icon: '🧃', color: 'bg-cyan-100 text-cyan-700' },
+            'Haushalt':       { icon: '🧹', color: 'bg-purple-100 text-purple-700' },
+            'Sonstiges':      { icon: '📦', color: 'bg-orange-100 text-orange-700' },
+        };
+        const categories = Object.keys(categoryMeta);
+
+        let items = [], newItemName = '', selectedCategory = 'Allgemein';
+
+        function initializeFirebaseListener() {
+            if (!isConfigured) return;
+            itemsRef.on('value', function(snapshot) {
+                var data = snapshot.val();
+                items = data ? Object.keys(data).map(function(key) { return data[key]; }) : [];
+                render();
+            });
+        }
+
+        function addItem() {
+            if (!isConfigured || !newItemName.trim()) return;
+            var newItemObj = {
+                id: Date.now(),
+                name: newItemName.trim(),
+                category: selectedCategory,
+                checked: false,
+                addedAt: new Date().toISOString()
+            };
+            itemsRef.child(newItemObj.id.toString()).set(newItemObj);
+            newItemName = '';
+            render();
+        }
+
+        function toggleItem(id) {
+            if (!isConfigured) return;
+            var item = items.find(function(i) { return i.id === id; });
+            if (item) itemsRef.child(id.toString()).update({ checked: !item.checked });
+        }
+
+        function deleteItem(id) {
+            if (!isConfigured) return;
+            itemsRef.child(id.toString()).remove();
+        }
+
+        function clearChecked() {
+            if (!isConfigured) return;
+            items.filter(function(item) { return item.checked; }).forEach(function(item) {
+                itemsRef.child(item.id.toString()).remove();
+            });
+        }
+
+        function groupItemsByCategory() {
+            var grouped = {};
+            // preserve defined category order
+            for (var k = 0; k < categories.length; k++) {
+                var cat = categories[k];
+                var catItems = items.filter(function(i) { return i.category === cat; });
+                if (catItems.length > 0) grouped[cat] = catItems;
+            }
+            // items with unknown categories
+            for (var i = 0; i < items.length; i++) {
+                var item = items[i];
+                if (!grouped[item.category]) grouped[item.category] = [];
+                if (!categories.includes(item.category)) grouped[item.category].push(item);
+            }
+            return grouped;
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function render() {
+            var uncheckedCount = 0, checkedCount = 0;
+            for (var i = 0; i < items.length; i++) {
+                items[i].checked ? checkedCount++ : uncheckedCount++;
+            }
+            var totalCount = items.length;
+            var progressPct = totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0;
+
+            var groupedItems = groupItemsByCategory();
+
+            // --- category options ---
+            var categoriesHtml = '';
+            for (var i = 0; i < categories.length; i++) {
+                var meta = categoryMeta[categories[i]] || { icon: '📦' };
+                categoriesHtml += '<option value="' + categories[i] + '"' +
+                    (categories[i] === selectedCategory ? ' selected' : '') + '>' +
+                    meta.icon + ' ' + categories[i] + '</option>';
+            }
+
+            // --- items list ---
+            var itemsListHtml = '';
+            var categoryKeys = Object.keys(groupedItems);
+
+            if (categoryKeys.length === 0) {
+                itemsListHtml = '<div class="bg-white rounded-2xl shadow p-12 text-center">' +
+                    '<p class="text-5xl mb-3">🛒</p>' +
+                    '<p class="text-xl font-semibold text-gray-400">Die Liste ist leer</p>' +
+                    '<p class="text-sm text-gray-300 mt-1">Füge oben deinen ersten Artikel hinzu</p>' +
+                    '</div>';
+            } else {
+                for (var i = 0; i < categoryKeys.length; i++) {
+                    var cat = categoryKeys[i];
+                    var catItems = groupedItems[cat];
+                    var meta = categoryMeta[cat] || { icon: '📦', color: 'bg-gray-100 text-gray-600' };
+
+                    itemsListHtml += '<div class="bg-white rounded-2xl shadow p-4 mb-3">';
+                    itemsListHtml += '<div class="flex items-center gap-2 mb-3">' +
+                        '<span class="text-xl">' + meta.icon + '</span>' +
+                        '<h3 class="font-semibold text-gray-700">' + escapeHtml(cat) + '</h3>' +
+                        '<span class="ml-auto text-xs font-medium ' + meta.color + ' px-2 py-0.5 rounded-full">' + catItems.length + '</span>' +
+                        '</div>';
+                    itemsListHtml += '<div class="space-y-2">';
+
+                    for (var j = 0; j < catItems.length; j++) {
+                        var item = catItems[j];
+                        var isChecked = item.checked;
+                        itemsListHtml += '<div class="flex items-center gap-3 px-3 py-2.5 rounded-xl ' +
+                            (isChecked ? 'bg-gray-50' : 'bg-green-50') + ' slide-in">';
+
+                        // Delete button (left)
+                        itemsListHtml += '<button onclick="deleteItem(' + item.id + ')" ' +
+                            'class="del-btn text-red-400 hover:text-red-600 p-1.5 rounded-lg" title="Löschen">' +
+                            '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" ' +
+                            'd="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>' +
+                            '</svg></button>';
+
+                        // Item name
+                        itemsListHtml += '<span class="item-label flex-1 text-base ' +
+                            (isChecked ? 'line-through text-gray-400' : 'text-gray-800') + '">' +
+                            escapeHtml(item.name) + '</span>';
+
+                        // Checkbox button (right)
+                        itemsListHtml += '<button onclick="toggleItem(' + item.id + ')" class="check-btn' + (isChecked ? ' done' : '') + '">';
+                        if (isChecked) {
+                            itemsListHtml += '<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+                                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>';
+                        }
+                        itemsListHtml += '</button>';
+
+                        itemsListHtml += '</div>';
+                    }
+                    itemsListHtml += '</div></div>';
+                }
+
+                if (checkedCount > 0) {
+                    itemsListHtml += '<button onclick="clearChecked()" ' +
+                        'class="w-full flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-500 border border-red-200 py-3 rounded-xl font-medium transition-colors">' +
+                        '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>' +
+                        'Erledigte löschen (' + checkedCount + ')</button>';
+                }
+            }
+
+            // --- progress bar ---
+            var progressHtml = '';
+            if (totalCount > 0) {
+                progressHtml = '<div class="mt-4">' +
+                    '<div class="flex justify-between text-xs text-gray-400 mb-1">' +
+                    '<span>' + checkedCount + ' von ' + totalCount + ' erledigt</span>' +
+                    '<span>' + progressPct + '%</span></div>' +
+                    '<div class="w-full bg-gray-100 rounded-full h-2">' +
+                    '<div class="progress-bar-inner bg-gradient-to-r from-green-600 to-green-400 h-2 rounded-full" style="width:' + progressPct + '%"></div>' +
+                    '</div></div>';
+            }
+
+            // --- status dot ---
+            var statusDot = isConfigured
+                ? '<span class="flex items-center gap-1.5 text-xs text-green-600 font-medium">' +
+                  '<span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span>Online & synchronisiert</span>'
+                : '<span class="flex items-center gap-1.5 text-xs text-red-500 font-medium">' +
+                  '<span class="w-2 h-2 rounded-full bg-red-500 inline-block"></span>Offline</span>';
+
+            // --- full render ---
+            document.getElementById('app').innerHTML =
+                '<div class="max-w-lg mx-auto px-4 py-6">' +
+
+                // Header
+                '<div class="bg-gradient-to-r from-green-700 to-green-500 rounded-2xl shadow-lg p-6 mb-4 text-white">' +
+                '<div class="flex items-start justify-between">' +
+                '<div><h1 class="text-2xl font-bold mb-0.5">Einkaufsliste</h1>' +
+                statusDot + '</div>' +
+                '<span class="text-4xl">🛒</span></div>' +
+                progressHtml +
+                '</div>' +
+
+                // Add item card
+                '<div class="bg-white rounded-2xl shadow p-4 mb-4">' +
+                '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Artikel hinzufügen</p>' +
+                '<input type="text" id="newItemInput" placeholder="z.B. Milch, Brot, Äpfel …" value="' + escapeHtml(newItemName) + '" ' +
+                'class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl text-gray-800 placeholder-gray-300 mb-3 transition-all">' +
+                '<div class="flex gap-2">' +
+                '<select id="categorySelect" class="flex-1 px-3 py-3 border-2 border-gray-100 rounded-xl text-gray-700 bg-white transition-all">' + categoriesHtml + '</select>' +
+                '<button onclick="addItem()" ' +
+                'class="bg-green-700 hover:bg-green-800 active:bg-green-900 text-white px-5 py-3 rounded-xl font-semibold transition-colors flex items-center gap-1.5">' +
+                '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>' +
+                'Hinzufügen</button></div>' +
+                // Import button
+                '<div class="border-t border-gray-100 mt-4 pt-4">' +
+                '<button onclick="document.getElementById(\'importFileInput\').click()" ' +
+                'class="w-full flex items-center justify-center gap-2 bg-green-700 hover:bg-green-800 active:bg-green-900 text-white py-3 rounded-xl font-semibold transition-colors">' +
+                '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>' +
+                'Meine Liste importieren</button>' +
+                '</div></div>' +
+
+                // Items list
+                '<div>' + itemsListHtml + '</div>' +
+                '</div>';
+
+            var input = document.getElementById('newItemInput');
+            if (input) {
+                input.addEventListener('input', function(e) { newItemName = e.target.value; });
+                input.addEventListener('keypress', function(e) { if (e.key === 'Enter') addItem(); });
+            }
+            var select = document.getElementById('categorySelect');
+            if (select) {
+                select.addEventListener('change', function(e) { selectedCategory = e.target.value; });
+            }
+        }
+
+        // --- Auto-categorisation keyword map ---
+        var categoryKeywords = {
+            'Obst & Gemüse': [
+                'kartoffel', 'zwiebel', 'knoblauch', 'paprika', 'karotte', 'zucchini',
+                'brokkoli', 'kraut', 'salat', 'gurke', 'tomate', 'beere', 'beeren',
+                'tk-spinat', 'tk spinat', 'spinat', 'tk-gemüse', 'tk gemüse',
+                'apfel', 'birne', 'banane', 'orange', 'zitrone', 'erdbeere', 'himbeere'
+            ],
+            'Backwaren': [
+                'brot', 'wrap', 'wraps', 'brötchen', 'toast', 'semmel', 'gebäck'
+            ],
+            'Milchprodukte': [
+                'sojaskyr', 'sojajoghurt', 'joghurt', 'milch', 'käse', 'butter',
+                'quark', 'sahne', 'oatly', 'hafermilch', 'mandelmilch'
+            ],
+            'Sonstiges': [
+                'tofu', 'edamame', 'sojagranulat', 'seitan',
+                'kichererbse', 'kidneybohne', 'linse', 'bohne',
+                'reis', 'haferflocken', 'pasta', 'nudel',
+                'passata', 'currypaste', 'kokosmilch', 'hummus',
+                'sojasauce', 'gewürz', 'gewürze', 'salz', 'pfeffer', 'öl'
+            ]
+        };
+
+        function guessCategory(name) {
+            var lower = name.toLowerCase();
+            var catOrder = ['Obst & Gemüse', 'Backwaren', 'Milchprodukte', 'Sonstiges'];
+            for (var c = 0; c < catOrder.length; c++) {
+                var cat = catOrder[c];
+                var keywords = categoryKeywords[cat];
+                for (var k = 0; k < keywords.length; k++) {
+                    if (lower.indexOf(keywords[k]) !== -1) return cat;
+                }
+            }
+            return 'Allgemein';
+        }
+
+        function parseAndImport(text) {
+            if (!isConfigured) return;
+            var lines = text.split('\n');
+            var count = 0;
+            var baseTs = Date.now();
+
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i].trim();
+                if (!line) continue;
+                // Skip store-name lines (all-uppercase words like "HOFER", "BILLA")
+                if (/^[A-ZÄÖÜ][A-ZÄÖÜ\s&]+$/.test(line)) continue;
+                // Only process list items starting with "- "
+                if (line.indexOf('- ') !== 0) continue;
+
+                var name = line.slice(2).trim();
+                if (!name) continue;
+
+                var newItemObj = {
+                    id: baseTs + i,          // unique per line within the same import
+                    name: name,
+                    category: guessCategory(name),
+                    checked: false,
+                    addedAt: new Date().toISOString()
+                };
+                itemsRef.child(newItemObj.id.toString()).set(newItemObj);
+                count++;
+            }
+            return count;
+        }
+
+        // Wire up the static file input once
+        document.getElementById('importFileInput').addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function(ev) {
+                var count = parseAndImport(ev.target.result);
+                alert(count + ' Artikel erfolgreich importiert!');
+            };
+            reader.readAsText(file, 'UTF-8');
+            // Reset so the same file can be imported again if needed
+            e.target.value = '';
+        });
+
+        if (isConfigured) {
+            initializeFirebaseListener();
+        } else {
+            render();
+        }
+    </script>
+</body>
+</html>
