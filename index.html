@@ -1209,6 +1209,7 @@
     const SCREENS = { list: 'screen-list', recipes: 'screen-recipes', budget: 'screen-budget', lists: 'screen-lists' };
     function switchTab(tab, btn) {
       currentTab = tab;
+      try { localStorage.setItem('lb-tab', tab); } catch(e) {}
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       Object.values(SCREENS).forEach(id => {
@@ -1220,6 +1221,19 @@
       if (tab === 'budget') updateBudgetScreen();
       if (tab === 'lists')  renderListsScreen();
     }
+
+    /* restore last active tab on load */
+    (function() {
+      try {
+        const saved = localStorage.getItem('lb-tab');
+        if (saved && SCREENS[saved]) {
+          const btns = document.querySelectorAll('.tab-btn');
+          const tabNames = ['list','recipes','budget','lists'];
+          const idx = tabNames.indexOf(saved);
+          if (idx !== -1 && btns[idx]) switchTab(saved, btns[idx]);
+        }
+      } catch(e) {}
+    })();
 
     /* ── Budget screen update ── */
     function updateBudgetScreen() {
