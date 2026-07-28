@@ -4,8 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <title>Frisch</title>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#10b981" id="theme-color-meta">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <title>ListaBombastica</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -25,6 +28,9 @@
       --text-2:         #4b7a66;
       --text-3:         #8aaaa0;
       --tab-bg:         #ffffff;
+      --primary-bg:     rgba(16,185,129,0.10);
+      --primary-bg-8:   rgba(16,185,129,0.08);
+      --primary-bg-12:  rgba(16,185,129,0.12);
     }
     [data-theme="warm"] {
       --primary:        #e06a3b;
@@ -38,6 +44,9 @@
       --text-2:         #7a4e3b;
       --text-3:         #aa8a7a;
       --tab-bg:         #ffffff;
+      --primary-bg:     rgba(224,106,59,0.10);
+      --primary-bg-8:   rgba(224,106,59,0.08);
+      --primary-bg-12:  rgba(224,106,59,0.12);
     }
     [data-theme="dark"] {
       --primary:        #4ade80;
@@ -51,6 +60,9 @@
       --text-2:         #7aa08a;
       --text-3:         #4a6a5a;
       --tab-bg:         #1c2220;
+      --primary-bg:     rgba(74,222,128,0.10);
+      --primary-bg-8:   rgba(74,222,128,0.08);
+      --primary-bg-12:  rgba(74,222,128,0.12);
     }
     [data-theme="mono"] {
       --primary:        #0a0a0a;
@@ -64,6 +76,9 @@
       --text-2:         #4a4a4a;
       --text-3:         #8a8a8a;
       --tab-bg:         #ffffff;
+      --primary-bg:     rgba(10,10,10,0.10);
+      --primary-bg-8:   rgba(10,10,10,0.08);
+      --primary-bg-12:  rgba(10,10,10,0.12);
     }
 
     /* ── Reset ── */
@@ -83,6 +98,7 @@
     #root {
       max-width: 412px;
       margin: 0 auto;
+      min-height: 100vh;
       min-height: 100dvh;
       display: flex;
       flex-direction: column;
@@ -92,7 +108,7 @@
     .screen {
       flex: 1;
       overflow-y: auto;
-      overflow-x: hidden;
+      overflow-x: clip;
       padding-bottom: 80px;
     }
 
@@ -403,7 +419,7 @@
     .cat-chip.selected {
       border-color: var(--primary);
       color: var(--primary);
-      background: color-mix(in srgb, var(--primary) 8%, var(--card));
+      background: var(--primary-bg-8);
     }
 
     /* ── Animations ── */
@@ -452,7 +468,7 @@
       <!-- Hero -->
       <div class="hero">
         <div class="hero-eyebrow">Wocheneinkauf</div>
-        <div class="hero-title">Frisch</div>
+        <div class="hero-title">ListaBombastica</div>
         <div class="hero-sub">3 von 12 Artikeln erledigt</div>
         <div class="hero-progress-bar">
           <div class="hero-progress-fill" style="width:25%"></div>
@@ -472,6 +488,18 @@
         <div class="theme-dot"        data-t="mono"   onclick="setTheme('mono')"></div>
       </div>
 
+      <!-- List switcher -->
+      <div id="list-switcher" style="display:flex;gap:8px;overflow-x:auto;padding:0 16px 12px;scrollbar-width:none;-webkit-overflow-scrolling:touch">
+        <!-- rendered by renderListSwitcher() -->
+      </div>
+
+      <!-- Import link (above add bar) -->
+      <div style="text-align:right;margin:0 20px 6px">
+        <button onclick="openImport()" style="background:none;border:none;font-family:inherit;font-size:12px;font-weight:600;color:var(--text-3);cursor:pointer;padding:4px 0;transition:color 0.12s">
+          📥 Liste importieren
+        </button>
+      </div>
+
       <!-- Add bar -->
       <div class="add-bar">
         <input class="add-input" id="add-input" placeholder="Artikel hinzufügen …" type="text" autocomplete="off">
@@ -482,25 +510,9 @@
         </button>
       </div>
 
-      <!-- Category picker -->
-      <div class="cat-picker" id="cat-picker">
-        <div class="cat-chip selected" data-cat="Allgemein"      onclick="selectCat(this)">🧺 Allgemein</div>
-        <div class="cat-chip"          data-cat="Obst &amp; Gemüse" onclick="selectCat(this)">🥦 Obst &amp; Gemüse</div>
-        <div class="cat-chip"          data-cat="Milchprodukte"  onclick="selectCat(this)">🥛 Milch</div>
-        <div class="cat-chip"          data-cat="Brot &amp; Backwaren" onclick="selectCat(this)">🍞 Brot</div>
-        <div class="cat-chip"          data-cat="Fleisch &amp; Fisch"  onclick="selectCat(this)">🥩 Fleisch</div>
-        <div class="cat-chip"          data-cat="Getränke"       onclick="selectCat(this)">🧃 Getränke</div>
-        <div class="cat-chip"          data-cat="Tiefkühl"       onclick="selectCat(this)">❄️ Tiefkühl</div>
-        <div class="cat-chip"          data-cat="Drogerie"       onclick="selectCat(this)">🧴 Drogerie</div>
-        <div class="cat-chip"          data-cat="Haushalt"       onclick="selectCat(this)">🧹 Haushalt</div>
-        <div class="cat-chip"          data-cat="Snacks"         onclick="selectCat(this)">🍿 Snacks</div>
-      </div>
-
-      <!-- Import link -->
-      <div style="text-align:right;margin:-4px 20px 12px">
-        <button onclick="openImport()" style="background:none;border:none;font-family:inherit;font-size:12px;font-weight:600;color:var(--text-3);cursor:pointer;padding:4px 0;transition:color 0.12s">
-          📥 Liste importieren
-        </button>
+      <!-- Store filter -->
+      <div id="store-filter" style="display:flex;gap:7px;overflow-x:auto;padding:0 16px 14px;scrollbar-width:none;-webkit-overflow-scrolling:touch">
+        <!-- rendered by renderStoreFilter() -->
       </div>
 
       <!-- Item list -->
@@ -587,15 +599,15 @@
         <!-- Weekly bar chart (static for now) -->
         <div style="display:flex;align-items:flex-end;gap:6px;height:64px;margin-bottom:8px">
           <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-            <div style="flex:1;width:100%;background:var(--surface);border-radius:6px 6px 0 0;min-height:8px;height:45%;background:color-mix(in srgb, var(--primary) 40%, var(--surface))"></div>
+            <div style="flex:1;width:100%;background:var(--primary-bg);border-radius:6px 6px 0 0;min-height:8px;height:45%;opacity:0.7"></div>
             <div style="font-size:10px;color:var(--text-3);font-weight:600">Mo</div>
           </div>
           <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-            <div style="width:100%;border-radius:6px 6px 0 0;height:70%;background:color-mix(in srgb, var(--primary) 55%, var(--surface))"></div>
+            <div style="width:100%;border-radius:6px 6px 0 0;height:70%;background:var(--primary);opacity:0.55"></div>
             <div style="font-size:10px;color:var(--text-3);font-weight:600">Di</div>
           </div>
           <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-            <div style="width:100%;border-radius:6px 6px 0 0;height:30%;background:color-mix(in srgb, var(--primary) 30%, var(--surface))"></div>
+            <div style="width:100%;border-radius:6px 6px 0 0;height:30%;background:var(--primary);opacity:0.3"></div>
             <div style="font-size:10px;color:var(--text-3);font-weight:600">Mi</div>
           </div>
           <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
@@ -603,15 +615,15 @@
             <div style="font-size:10px;color:var(--primary);font-weight:700">Do</div>
           </div>
           <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-            <div style="width:100%;border-radius:6px 6px 0 0;height:20%;background:color-mix(in srgb, var(--primary) 25%, var(--surface))"></div>
+            <div style="width:100%;border-radius:6px 6px 0 0;height:20%;background:var(--primary);opacity:0.25"></div>
             <div style="font-size:10px;color:var(--text-3);font-weight:600">Fr</div>
           </div>
           <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-            <div style="width:100%;border-radius:6px 6px 0 0;height:55%;background:color-mix(in srgb, var(--primary) 45%, var(--surface))"></div>
+            <div style="width:100%;border-radius:6px 6px 0 0;height:55%;background:var(--primary);opacity:0.45"></div>
             <div style="font-size:10px;color:var(--text-3);font-weight:600">Sa</div>
           </div>
           <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-            <div style="width:100%;border-radius:6px 6px 0 0;height:10%;background:color-mix(in srgb, var(--primary) 20%, var(--surface))"></div>
+            <div style="width:100%;border-radius:6px 6px 0 0;height:10%;background:var(--primary);opacity:0.2"></div>
             <div style="font-size:10px;color:var(--text-3);font-weight:600">So</div>
           </div>
         </div>
@@ -633,38 +645,12 @@
         <div class="hero-sub">Wähle oder erstelle eine Einkaufsliste</div>
       </div>
 
-      <div class="section-label">Aktive Listen</div>
-
-      <!-- Current list card (active) -->
-      <div class="cat-card" style="margin-bottom:10px">
-        <div style="padding:16px">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-            <div style="width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--hero-from),var(--hero-to));display:flex;align-items:center;justify-content:center;font-size:18px">🛒</div>
-            <div style="flex:1">
-              <div style="font-size:15px;font-weight:600;color:var(--text-1)">Wocheneinkauf</div>
-              <div style="font-size:12px;color:var(--text-3)" id="list-card-sub">Wird geladen …</div>
-            </div>
-            <div style="width:8px;height:8px;border-radius:50%;background:var(--primary)"></div>
-          </div>
-          <div style="background:var(--surface);border-radius:99px;height:4px;overflow:hidden">
-            <div id="list-card-bar" style="height:100%;background:var(--primary);border-radius:99px;transition:width 0.4s;width:0%"></div>
-          </div>
-        </div>
+      <div id="lists-content" style="padding-bottom:8px">
+        <!-- rendered by renderListsScreen() -->
       </div>
 
-      <!-- Placeholder other lists -->
-      <div class="cat-card" style="margin-bottom:10px;opacity:0.55">
-        <div style="padding:16px;display:flex;align-items:center;gap:10px">
-          <div style="width:38px;height:38px;border-radius:12px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:18px">🎉</div>
-          <div>
-            <div style="font-size:15px;font-weight:600;color:var(--text-1)">Grillabend</div>
-            <div style="font-size:12px;color:var(--text-3)">Archiviert</div>
-          </div>
-        </div>
-      </div>
-
-      <div style="margin:8px 16px 16px">
-        <button style="width:100%;border:1.5px dashed var(--card-border);border-radius:16px;padding:14px;background:transparent;color:var(--text-3);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:border-color 0.12s,color 0.12s" onclick="showToast('Neue Listen-Funktion kommt bald!')">
+      <div style="margin:4px 16px 20px">
+        <button onclick="openNewList()" style="width:100%;border:1.5px dashed var(--card-border);border-radius:16px;padding:14px;background:transparent;color:var(--primary);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:border-color 0.12s,color 0.12s">
           + Neue Liste erstellen
         </button>
       </div>
@@ -758,6 +744,81 @@
     </div>
   </div>
 
+  <!-- New List Modal -->
+  <div id="newlist-modal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)" onclick="closeNewListIfBg(event)">
+    <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:412px;background:var(--card);border-radius:24px 24px 0 0;padding:24px 20px;box-shadow:0 -8px 32px rgba(0,0,0,0.12)">
+      <div style="width:36px;height:4px;background:var(--card-border);border-radius:99px;margin:0 auto 20px"></div>
+      <div style="font-size:18px;font-weight:700;color:var(--text-1);margin-bottom:16px">Neue Liste</div>
+
+      <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-3);margin-bottom:8px">Name</div>
+      <input id="newlist-name" type="text" placeholder="z.B. Wocheneinkauf, Party, Urlaub …"
+        style="width:100%;border:1.5px solid var(--card-border);border-radius:14px;padding:12px 14px;font-family:inherit;font-size:15px;color:var(--text-1);background:var(--surface);outline:none;margin-bottom:16px"
+        onkeydown="if(event.key==='Enter') confirmNewList()">
+
+      <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-3);margin-bottom:10px">Farbe</div>
+      <div style="display:flex;gap:10px;margin-bottom:20px">
+        <div class="accent-dot active" data-accent="#10b981" onclick="pickAccent(this)" style="width:32px;height:32px;border-radius:50%;background:#10b981;cursor:pointer;border:3px solid #10b981;outline:3px solid var(--card);outline-offset:1px"></div>
+        <div class="accent-dot" data-accent="#3b82f6" onclick="pickAccent(this)" style="width:32px;height:32px;border-radius:50%;background:#3b82f6;cursor:pointer;border:3px solid transparent"></div>
+        <div class="accent-dot" data-accent="#f97316" onclick="pickAccent(this)" style="width:32px;height:32px;border-radius:50%;background:#f97316;cursor:pointer;border:3px solid transparent"></div>
+        <div class="accent-dot" data-accent="#8b5cf6" onclick="pickAccent(this)" style="width:32px;height:32px;border-radius:50%;background:#8b5cf6;cursor:pointer;border:3px solid transparent"></div>
+        <div class="accent-dot" data-accent="#ef4444" onclick="pickAccent(this)" style="width:32px;height:32px;border-radius:50%;background:#ef4444;cursor:pointer;border:3px solid transparent"></div>
+        <div class="accent-dot" data-accent="#ec4899" onclick="pickAccent(this)" style="width:32px;height:32px;border-radius:50%;background:#ec4899;cursor:pointer;border:3px solid transparent"></div>
+      </div>
+
+      <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-3);margin-bottom:10px">Automatisch wiederholen</div>
+      <div id="newlist-repeat-opts" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+        <button class="repeat-opt active" data-days="0"  onclick="pickRepeat(this)" style="padding:7px 14px;border-radius:99px;border:1.5px solid var(--primary);background:var(--primary-bg-12);font-size:13px;font-weight:600;color:var(--primary);cursor:pointer;font-family:inherit">Nie</button>
+        <button class="repeat-opt"        data-days="7"  onclick="pickRepeat(this)" style="padding:7px 14px;border-radius:99px;border:1.5px solid var(--card-border);background:transparent;font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;font-family:inherit">1 Woche</button>
+        <button class="repeat-opt"        data-days="14" onclick="pickRepeat(this)" style="padding:7px 14px;border-radius:99px;border:1.5px solid var(--card-border);background:transparent;font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;font-family:inherit">2 Wochen</button>
+        <button class="repeat-opt"        data-days="30" onclick="pickRepeat(this)" style="padding:7px 14px;border-radius:99px;border:1.5px solid var(--card-border);background:transparent;font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;font-family:inherit">1 Monat</button>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <button onclick="document.getElementById('newlist-modal').style.display='none'" style="flex:1;padding:12px;background:var(--surface);border:1.5px solid var(--card-border);border-radius:14px;font-size:14px;font-weight:600;color:var(--text-3);cursor:pointer;font-family:inherit">Abbrechen</button>
+        <button onclick="confirmNewList()" style="flex:2;padding:12px;background:var(--primary);border:none;border-radius:14px;font-size:14px;font-weight:600;color:#fff;cursor:pointer;font-family:inherit">Erstellen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Repeat Settings Modal -->
+  <div id="repeat-modal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)" onclick="if(event.target===this)this.style.display='none'">
+    <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:412px;background:var(--card);border-radius:24px 24px 0 0;padding:24px 20px;box-shadow:0 -8px 32px rgba(0,0,0,0.12)">
+      <div style="width:36px;height:4px;background:var(--card-border);border-radius:99px;margin:0 auto 20px"></div>
+      <div style="font-size:16px;font-weight:700;color:var(--text-1);margin-bottom:4px">Automatisch wiederholen</div>
+      <div id="repeat-modal-name" style="font-size:13px;color:var(--text-3);margin-bottom:16px"></div>
+      <div id="repeat-modal-opts" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
+    </div>
+  </div>
+
+  <!-- Store Change Modal -->
+  <div id="store-modal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)" onclick="closeStoreIfBg(event)">
+    <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:412px;background:var(--card);border-radius:24px 24px 0 0;padding:24px 20px;box-shadow:0 -8px 32px rgba(0,0,0,0.12)">
+      <div style="width:36px;height:4px;background:var(--card-border);border-radius:99px;margin:0 auto 20px"></div>
+      <div style="font-size:16px;font-weight:700;color:var(--text-1);margin-bottom:4px">Geschäft auswählen</div>
+      <div id="store-modal-name" style="font-size:13px;color:var(--text-3);margin-bottom:16px"></div>
+      <div id="store-modal-options" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+  </div>
+
+  <!-- Price Edit Modal -->
+  <div id="price-modal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)" onclick="closePriceIfBg(event)">
+    <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:412px;background:var(--card);border-radius:24px 24px 0 0;padding:24px 20px;box-shadow:0 -8px 32px rgba(0,0,0,0.12)">
+      <div style="width:36px;height:4px;background:var(--card-border);border-radius:99px;margin:0 auto 20px"></div>
+      <div style="font-size:16px;font-weight:700;color:var(--text-1);margin-bottom:4px">Preis festlegen</div>
+      <div id="price-modal-name" style="font-size:13px;color:var(--text-3);margin-bottom:16px"></div>
+      <div style="display:flex;align-items:center;background:var(--surface);border:1.5px solid var(--card-border);border-radius:14px;padding:12px 14px;gap:8px;margin-bottom:16px">
+        <span style="font-size:16px;font-weight:600;color:var(--text-2)">€</span>
+        <input id="price-input" type="number" min="0" step="0.01" placeholder="0.00"
+          style="flex:1;border:none;background:transparent;font-size:18px;font-weight:600;color:var(--text-1);outline:none;font-family:inherit"
+          onkeydown="if(event.key==='Enter') confirmPrice()">
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="confirmPrice(0)" style="flex:1;padding:12px;background:var(--surface);border:1.5px solid var(--card-border);border-radius:14px;font-size:14px;font-weight:600;color:var(--text-3);cursor:pointer;font-family:inherit">Entfernen</button>
+        <button onclick="confirmPrice()" style="flex:2;padding:12px;background:var(--primary);border:none;border-radius:14px;font-size:14px;font-weight:600;color:#fff;cursor:pointer;font-family:inherit">Speichern</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 
@@ -776,6 +837,16 @@
       { key: 'Allgemein',        emoji: '🧺' },
     ];
 
+    const STORES = [
+      { key: 'Alle',      color: null,      dot: null },
+      { key: 'Spar',      color: '#00843d', dot: '#00843d' },
+      { key: 'Billa',     color: '#f5c800', dot: '#f5c800' },
+      { key: 'Hofer',     color: '#f47920', dot: '#f47920' },
+      { key: 'DM',        color: '#d40066', dot: '#d40066' },
+      { key: 'Fressnapf', color: '#e30613', dot: '#e30613' },
+      { key: 'Sonstiges', color: null,      dot: '#9ca3af' },
+    ];
+
     /* ── Firebase ── */
     const firebaseConfig = {
       apiKey:            "AIzaSyBvNIBlsUlLfMksyYvSHA3p7aYskH90lRo",
@@ -787,50 +858,111 @@
       appId:             "1:990532694118:web:dc122f2f1c4595930cbda7",
     };
 
-    let db, itemsRef, fbReady = false;
+    let db, itemsRef, listsRef, fbReady = false;
     try {
       firebase.initializeApp(firebaseConfig);
       db       = firebase.database();
-      itemsRef = db.ref('lists/wocheneinkauf/items');
+      listsRef = db.ref('lists');
       fbReady  = true;
     } catch(e) { console.error('Firebase init:', e); }
 
-    let items = [];
+    let items    = [];
+    let allLists = [];
+    let activeListId = (() => { try { return localStorage.getItem('lb-activeList') || 'wocheneinkauf'; } catch(e) { return 'wocheneinkauf'; } })();
     let selectedCategory = 'Allgemein';
-    let currentTab = 'list';
+    let selectedStore    = 'Alle';
+    let currentTab       = 'list';
 
     function setStatus(online) {
       const dot  = document.getElementById('status-dot');
       const text = document.getElementById('status-text');
       if (!dot) return;
-      dot.style.background  = online ? 'rgba(255,255,255,0.9)' : 'rgba(255,100,100,0.8)';
-      text.textContent      = online ? 'Online' : 'Offline';
+      dot.style.background = online ? 'rgba(255,255,255,0.9)' : 'rgba(255,100,100,0.8)';
+      text.textContent     = online ? 'Online' : 'Offline';
+    }
+
+    function attachItemsListener(listId) {
+      if (itemsRef) itemsRef.off();
+      itemsRef = db.ref('lists/' + listId + '/items');
+      itemsRef.on('value', snap => {
+        const val = snap.val();
+        items = val ? Object.entries(val).map(([id, d]) => ({ id, ...d })) : [];
+        renderList();
+      });
     }
 
     if (fbReady) {
-      /* live connection indicator */
       db.ref('.info/connected').on('value', snap => setStatus(!!snap.val()));
 
-      /* live data */
-      itemsRef.on('value', snap => {
-        const val = snap.val();
-        items = val
-          ? Object.entries(val).map(([id, d]) => ({ id, ...d }))
-          : [];
-        renderList();
+      /* ensure default list exists */
+      db.ref('lists/wocheneinkauf/name').once('value', snap => {
+        if (!snap.val()) {
+          db.ref('lists/wocheneinkauf').update({ name: 'Wocheneinkauf', accent: '#10b981', createdAt: Date.now() });
+        }
       });
+
+      /* listen to all lists for the Lists screen */
+      listsRef.on('value', snap => {
+        const val = snap.val() || {};
+        allLists = Object.entries(val).map(([id, data]) => ({
+          id,
+          name:      data.name      || id,
+          accent:    data.accent    || '#10b981',
+          createdAt: data.createdAt || 0,
+          interval:  data.interval  || 0,
+          lastReset: data.lastReset || data.createdAt || 0,
+          total:     data.items ? Object.keys(data.items).length : 0,
+          done:      data.items ? Object.values(data.items).filter(i => i.done).length : 0,
+        })).sort((a, b) => a.createdAt - b.createdAt);
+        checkAutoReset(allLists);
+        if (currentTab === 'lists') renderListsScreen();
+        renderListSwitcher();
+      });
+
+      attachItemsListener(activeListId);
     } else {
       setStatus(false);
       renderList();
     }
 
+    function setActiveList(id) {
+      activeListId = id;
+      try { localStorage.setItem('lb-activeList', id); } catch(e) {}
+      if (fbReady) attachItemsListener(id);
+      selectedStore = 'Alle';
+      /* switch to list tab */
+      const listBtn = document.querySelector('.tab-btn');
+      switchTab('list', listBtn);
+      const list = allLists.find(l => l.id === id);
+      showToast((list ? list.name : 'Liste') + ' geöffnet');
+    }
+
     /* ── Theme ── */
+    const THEME_COLORS = { fresh:'#10b981', warm:'#e06a3b', dark:'#141817', mono:'#0a0a0a' };
     function setTheme(t) {
       document.documentElement.setAttribute('data-theme', t);
       document.querySelectorAll('.theme-dot').forEach(d => {
         d.classList.toggle('active', d.dataset.t === t);
       });
+      const meta = document.getElementById('theme-color-meta');
+      if (meta) meta.setAttribute('content', THEME_COLORS[t] || '#10b981');
+      try { localStorage.setItem('frisch-theme', t); } catch(e) {}
     }
+    /* apply saved theme immediately, sync dots after DOM ready */
+    (function() {
+      try {
+        const saved = localStorage.getItem('frisch-theme');
+        if (saved) {
+          document.documentElement.setAttribute('data-theme', saved);
+          const meta = document.getElementById('theme-color-meta');
+          if (meta) meta.setAttribute('content', THEME_COLORS[saved] || '#10b981');
+          /* sync dot highlights */
+          document.querySelectorAll('.theme-dot').forEach(d => {
+            d.classList.toggle('active', d.dataset.t === saved);
+          });
+        }
+      } catch(e) {}
+    })();
 
     /* ── Category picker ── */
     function selectCat(el) {
@@ -844,7 +976,8 @@
       const input = document.getElementById('add-input');
       const name = input.value.trim();
       if (!name) { input.focus(); return; }
-      const newItem = { name, category: selectedCategory, done: false, createdAt: Date.now() };
+      const store = (selectedStore === 'Alle') ? 'Sonstiges' : selectedStore;
+      const newItem = { name, category: guessCategory(name), store, done: false, createdAt: Date.now() };
       if (fbReady) {
         itemsRef.push(newItem);
       } else {
@@ -885,22 +1018,37 @@
     }
 
     function renderList() {
+      try {
+      renderStoreFilter();
+      renderListSwitcher();
       const el = document.getElementById('item-list');
-      const done   = items.filter(i => i.done).length;
-      const total  = items.length;
+
+      /* apply store filter */
+      const visible = selectedStore === 'Alle'
+        ? items
+        : items.filter(i => (i.store || 'Sonstiges') === selectedStore);
+
+      const done   = visible.filter(i => i.done).length;
+      const total  = visible.length;
       const pct    = total ? Math.round(done / total * 100) : 0;
 
       /* hero update */
+      const allDone  = items.filter(i => i.done).length;
+      const allTotal = items.length;
+      const allPct   = allTotal ? Math.round(allDone / allTotal * 100) : 0;
+      const activeList = allLists.find(l => l.id === activeListId);
+      document.querySelector('.hero-eyebrow').textContent = activeList ? activeList.name : 'Wocheneinkauf';
       document.querySelector('.hero-sub').textContent =
-        total ? `${done} von ${total} Artikeln erledigt` : 'Liste ist leer';
-      document.querySelector('.hero-progress-fill').style.width = pct + '%';
-      document.querySelector('.hero-progress-label').textContent = pct + '% fertig';
+        allTotal ? `${allDone} von ${allTotal} Artikeln erledigt` : 'Liste ist leer';
+      document.querySelector('.hero-progress-fill').style.width = allPct + '%';
+      document.querySelector('.hero-progress-label').textContent = allPct + '% fertig';
 
       if (!total) {
+        const storeLabel = selectedStore !== 'Alle' ? ` bei ${selectedStore}` : '';
         el.innerHTML = `<div class="empty">
           <div class="empty-icon">🛒</div>
-          <div class="empty-title">Liste ist leer</div>
-          <div class="empty-sub">Füge oben deinen ersten Artikel hinzu</div>
+          <div class="empty-title">Keine Artikel${storeLabel}</div>
+          <div class="empty-sub">${selectedStore !== 'Alle' ? 'Wähle "Alle" oder füge Artikel für dieses Geschäft hinzu' : 'Füge oben deinen ersten Artikel hinzu'}</div>
         </div>`;
         return;
       }
@@ -908,11 +1056,11 @@
       /* group by category in fixed order */
       const grouped = {};
       CATEGORIES.forEach(c => {
-        const rows = items.filter(i => i.category === c.key);
+        const rows = visible.filter(i => i.category === c.key);
         if (rows.length) grouped[c.key] = { emoji: c.emoji, rows };
       });
       /* unknown categories */
-      items.forEach(i => {
+      visible.forEach(i => {
         if (!grouped[i.category]) grouped[i.category] = { emoji: '🧺', rows: [] };
         if (!CATEGORIES.find(c => c.key === i.category)) grouped[i.category].rows.push(i);
       });
@@ -928,18 +1076,22 @@
           </div>`;
         rows.forEach(item => {
           html += `<div class="item-row${item.done ? ' is-done' : ''}" data-id="${item.id}">
-            <div class="cb${item.done ? ' checked' : ''}" onclick="toggleDone('${item.id}')" role="checkbox" aria-checked="${item.done}" tabindex="0">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            </div>
             ${item.qty ? `<span class="item-qty">${esc(item.qty)}</span>` : ''}
             <span class="item-name">${esc(item.name)}</span>
+            ${renderStoreBadge(item)}
+            <button onclick="editPrice('${item.id}','${esc(item.name)}',${item.price||0})" style="background:none;border:none;cursor:pointer;padding:3px 6px;border-radius:8px;font-size:12px;font-weight:600;color:${item.price?'var(--primary)':'var(--text-3)'};font-family:inherit;transition:color 0.1s;white-space:nowrap" aria-label="Preis">
+              ${item.price ? '€ ' + Number(item.price).toFixed(2) : '€ –'}
+            </button>
             <button onclick="deleteItem('${item.id}')" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--text-3);opacity:0.6;transition:opacity 0.1s" aria-label="Löschen">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6m4-6v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
               </svg>
             </button>
+            <div class="cb${item.done ? ' checked' : ''}" onclick="toggleDone('${item.id}')" role="checkbox" aria-checked="${item.done}" tabindex="0">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
           </div>`;
         });
         html += '</div>';
@@ -947,14 +1099,20 @@
 
       /* clear done button */
       if (done > 0) {
+        const scope = selectedStore !== 'Alle' ? ` bei ${selectedStore}` : '';
         html += `<div style="margin:4px 16px 16px;text-align:center">
           <button onclick="clearDone()" style="background:none;border:1.5px solid var(--card-border);border-radius:12px;padding:10px 20px;font-size:13px;font-weight:600;color:var(--text-3);cursor:pointer;font-family:inherit;transition:border-color 0.12s,color 0.12s">
-            Erledigte löschen (${done})
+            Erledigte löschen${scope} (${done})
           </button>
         </div>`;
       }
 
       el.innerHTML = html;
+      } catch(err) {
+        console.error('renderList error:', err);
+        const el2 = document.getElementById('item-list');
+        if (el2) el2.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Ladefehler</div><div class="empty-sub">Bitte Seite neu laden</div></div>`;
+      }
     }
 
     function clearDone() {
@@ -968,10 +1126,143 @@
       }
     }
 
+    /* ── Price Modal ── */
+    let priceEditId = null;
+    function editPrice(id, name, current) {
+      priceEditId = id;
+      document.getElementById('price-modal-name').textContent = name;
+      document.getElementById('price-input').value = current > 0 ? current : '';
+      document.getElementById('price-modal').style.display = 'block';
+      setTimeout(() => document.getElementById('price-input').focus(), 80);
+    }
+    function closePriceIfBg(e) {
+      if (e.target === document.getElementById('price-modal')) {
+        document.getElementById('price-modal').style.display = 'none';
+      }
+    }
+    function confirmPrice(forceVal) {
+      const val = forceVal !== undefined ? forceVal : parseFloat(document.getElementById('price-input').value) || 0;
+      if (priceEditId) {
+        if (fbReady) {
+          itemsRef.child(priceEditId).update({ price: val });
+        } else {
+          const item = items.find(i => i.id === priceEditId);
+          if (item) { item.price = val; renderList(); }
+        }
+      }
+      document.getElementById('price-modal').style.display = 'none';
+      priceEditId = null;
+    }
+
+    /* ── List Switcher (main screen) ── */
+    function renderListSwitcher() {
+      const el = document.getElementById('list-switcher');
+      if (!el) return;
+      if (allLists.length <= 1) { el.style.display = 'none'; return; }
+      el.style.display = 'flex';
+      el.innerHTML = allLists.map(list => {
+        const active = list.id === activeListId;
+        const pct    = list.total ? Math.round(list.done / list.total * 100) : 0;
+        return `<button onclick="setActiveList('${list.id}')"
+          style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:8px 12px;border-radius:14px;border:1.5px solid ${active ? list.accent : 'var(--card-border)'};background:${active ? list.accent + '18' : 'var(--card)'};cursor:pointer;font-family:inherit;flex-shrink:0;min-width:100px;max-width:140px;transition:all 0.15s">
+          <span style="font-size:13px;font-weight:700;color:${active ? list.accent : 'var(--text-1)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px">${esc(list.name)}</span>
+          <span style="font-size:11px;color:var(--text-3)">${list.total ? pct + '% erledigt' : 'Leer'}</span>
+          <div style="width:100%;height:3px;background:var(--card-border);border-radius:99px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${list.accent};border-radius:99px;transition:width 0.3s"></div>
+          </div>
+        </button>`;
+      }).join('');
+    }
+
+    /* ── Store helpers ── */
+    function getStore(key) { return STORES.find(s => s.key === key) || STORES[STORES.length-1]; }
+
+    function renderStoreBadge(item) {
+      const s = getStore(item.store || 'Sonstiges');
+      const dot = s.dot ? `<span style="width:6px;height:6px;border-radius:50%;background:${s.dot};display:inline-block;flex-shrink:0"></span>` : '';
+      return `<button onclick="changeStore('${item.id}','${esc(item.name)}','${item.store||'Sonstiges'}')"
+        style="display:flex;align-items:center;gap:4px;background:none;border:1.5px solid var(--card-border);border-radius:8px;padding:2px 7px;font-size:11px;font-weight:600;color:var(--text-2);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">
+        ${dot}${esc(s.key === 'Alle' ? 'Sonstiges' : s.key)}
+      </button>`;
+    }
+
+    /* ── Store filter chips ── */
+    function renderStoreFilter() {
+      const el = document.getElementById('store-filter');
+      if (!el) return;
+
+      /* count items per store */
+      const counts = {};
+      STORES.forEach(s => { counts[s.key] = 0; });
+      items.forEach(i => {
+        const k = i.store || 'Sonstiges';
+        if (counts[k] !== undefined) counts[k]++;
+        else counts['Sonstiges']++;
+      });
+      counts['Alle'] = items.length;
+
+      el.innerHTML = STORES.map(s => {
+        const active = s.key === selectedStore;
+        const dot = s.dot && s.key !== 'Alle'
+          ? `<span style="width:7px;height:7px;border-radius:50%;background:${s.dot};display:inline-block;flex-shrink:0"></span> `
+          : '';
+        return `<button onclick="selectStore('${s.key}')"
+          style="display:flex;align-items:center;gap:5px;padding:6px 13px;border-radius:99px;border:1.5px solid ${active ? 'var(--primary)' : 'var(--card-border)'};background:${active ? 'var(--primary-bg)' : 'var(--card)'};font-size:12px;font-weight:600;color:${active ? 'var(--primary)' : 'var(--text-2)'};white-space:nowrap;cursor:pointer;font-family:inherit;flex-shrink:0;transition:all 0.12s">
+          ${dot}${esc(s.key)}<span style="opacity:0.55;margin-left:1px">${counts[s.key] || 0}</span>
+        </button>`;
+      }).join('');
+    }
+
+    function selectStore(key) {
+      selectedStore = key;
+      renderList();
+    }
+
+    /* ── Store change modal ── */
+    let storeEditId = null;
+    function changeStore(id, name, current) {
+      storeEditId = id;
+      document.getElementById('store-modal-name').textContent = name;
+      const opts = STORES.filter(s => s.key !== 'Alle');
+      document.getElementById('store-modal-options').innerHTML = opts.map(s => {
+        const active = (current || 'Sonstiges') === s.key;
+        const dot = s.dot
+          ? `<span style="width:10px;height:10px;border-radius:50%;background:${s.dot};display:inline-block;flex-shrink:0"></span>`
+          : `<span style="width:10px;height:10px;border-radius:50%;background:var(--text-3);display:inline-block;flex-shrink:0"></span>`;
+        return `<button onclick="confirmStoreChange('${s.key}')"
+          style="display:flex;align-items:center;gap:12px;padding:13px 16px;background:${active ? 'var(--primary-bg-8)' : 'var(--surface)'};border:1.5px solid ${active ? 'var(--primary)' : 'transparent'};border-radius:14px;font-size:15px;font-weight:600;color:${active ? 'var(--primary)' : 'var(--text-1)'};cursor:pointer;font-family:inherit;text-align:left;width:100%">
+          ${dot}${esc(s.key)}
+          ${active ? '<span style="margin-left:auto;font-size:12px;opacity:0.6">Aktuell</span>' : ''}
+        </button>`;
+      }).join('');
+      document.getElementById('store-modal').style.display = 'block';
+    }
+
+    function closeStoreIfBg(e) {
+      if (e.target === document.getElementById('store-modal')) {
+        document.getElementById('store-modal').style.display = 'none';
+      }
+    }
+
+    function confirmStoreChange(storeKey) {
+      if (storeEditId) {
+        if (fbReady) {
+          itemsRef.child(storeEditId).update({ store: storeKey });
+        } else {
+          const item = items.find(i => i.id === storeEditId);
+          if (item) { item.store = storeKey; renderList(); }
+        }
+      }
+      document.getElementById('store-modal').style.display = 'none';
+      storeEditId = null;
+      showToast('Geschäft geändert');
+    }
+
     /* ── Tab switch ── */
     const SCREENS = { list: 'screen-list', recipes: 'screen-recipes', budget: 'screen-budget', lists: 'screen-lists' };
     function switchTab(tab, btn) {
       currentTab = tab;
+      try { localStorage.setItem('lb-tab', tab); } catch(e) {}
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       Object.values(SCREENS).forEach(id => {
@@ -981,30 +1272,216 @@
       const active = document.getElementById(SCREENS[tab]);
       if (active) active.style.display = 'block';
       if (tab === 'budget') updateBudgetScreen();
-      if (tab === 'lists')  updateListsCard();
+      if (tab === 'lists')  renderListsScreen();
     }
+
+    /* restore last active tab on load */
+    (function() {
+      try {
+        const saved = localStorage.getItem('lb-tab');
+        if (saved && SCREENS[saved]) {
+          const btns = document.querySelectorAll('.tab-btn');
+          const tabNames = ['list','recipes','budget','lists'];
+          const idx = tabNames.indexOf(saved);
+          if (idx !== -1 && btns[idx]) switchTab(saved, btns[idx]);
+        }
+      } catch(e) {}
+    })();
 
     /* ── Budget screen update ── */
     function updateBudgetScreen() {
-      const total = items.reduce((s, i) => s + (i.price || 0), 0);
-      const budget = 80;
+      const priced  = items.filter(i => i.price > 0);
+      const total   = priced.reduce((s, i) => s + i.price, 0);
+      const budget  = 80;
+
       document.getElementById('budget-total').textContent = '€ ' + total.toFixed(2);
       const pct = Math.min(100, Math.round(total / budget * 100));
       document.getElementById('budget-bar').style.width = pct + '%';
       document.getElementById('budget-label').textContent = total > 0
-        ? `${pct}% von € ${budget} Budget`
-        : 'Kein Budget eingestellt';
+        ? `${pct}% von € ${budget} Wochenbudget`
+        : 'Noch keine Preise eingetragen';
+
+      /* category breakdown */
+      const catsEl = document.getElementById('budget-cats');
+      if (!priced.length) {
+        catsEl.innerHTML = `<div style="color:var(--text-3);font-size:14px;text-align:center;padding:12px 0">
+          Tippe auf € – bei einem Artikel um einen Preis einzutragen
+        </div>`;
+        return;
+      }
+
+      const catTotals = {};
+      priced.forEach(i => {
+        catTotals[i.category] = (catTotals[i.category] || 0) + i.price;
+      });
+      const sorted = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
+      const max = sorted[0][1];
+
+      catsEl.innerHTML = sorted.map(([cat, sum]) => {
+        const c    = CATEGORIES.find(c => c.key === cat) || { emoji: '🧺' };
+        const barW = Math.round(sum / max * 100);
+        return `<div style="margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+            <span>${c.emoji}</span>
+            <span style="flex:1;font-size:13px;font-weight:600;color:var(--text-1)">${esc(cat)}</span>
+            <span style="font-size:13px;font-weight:700;color:var(--primary)">€ ${sum.toFixed(2)}</span>
+          </div>
+          <div style="background:var(--surface);border-radius:99px;height:5px;overflow:hidden">
+            <div style="height:100%;width:${barW}%;background:var(--primary);border-radius:99px;transition:width 0.4s ease"></div>
+          </div>
+        </div>`;
+      }).join('');
     }
 
-    /* ── Lists card update ── */
-    function updateListsCard() {
-      const done  = items.filter(i => i.done).length;
-      const total = items.length;
-      const pct   = total ? Math.round(done / total * 100) : 0;
-      const sub   = document.getElementById('list-card-sub');
-      const bar   = document.getElementById('list-card-bar');
-      if (sub) sub.textContent = total ? `${done} von ${total} erledigt` : 'Noch keine Artikel';
-      if (bar) bar.style.width = pct + '%';
+    /* ── Lists screen ── */
+    const REPEAT_LABELS = { 0:'Nie', 7:'1 Woche', 14:'2 Wochen', 30:'1 Monat' };
+    function repeatLabel(days) { return days ? '🔄 ' + (REPEAT_LABELS[days] || days + ' Tage') : ''; }
+
+    function renderListsScreen() {
+      const el = document.getElementById('lists-content');
+      if (!el) return;
+      if (!allLists.length) {
+        el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">Keine Listen</div></div>';
+        return;
+      }
+      el.innerHTML = allLists.map(list => {
+        const pct      = list.total ? Math.round(list.done / list.total * 100) : 0;
+        const isActive = list.id === activeListId;
+        const rLabel   = repeatLabel(list.interval);
+        const nextReset = list.interval && list.lastReset
+          ? new Date(list.lastReset + list.interval * 86400000).toLocaleDateString('de-AT', { day:'numeric', month:'short' })
+          : null;
+        return `<div class="cat-card slide-up" style="margin-bottom:10px;cursor:pointer" onclick="setActiveList('${list.id}')">
+          <div style="padding:16px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:${list.total || rLabel ? '10px' : '0'}">
+              <div style="width:38px;height:38px;border-radius:12px;background:${list.accent};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🛒</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:15px;font-weight:700;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(list.name)}</div>
+                <div style="font-size:12px;color:var(--text-3)">${list.total ? `${list.done} von ${list.total} erledigt` : 'Noch keine Artikel'}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+                ${isActive ? `<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:${list.accent};background:${list.accent}22;padding:3px 8px;border-radius:99px">Aktiv</span>` : ''}
+                <button onclick="event.stopPropagation();openRepeatModal('${list.id}','${esc(list.name)}',${list.interval||0})" style="background:none;border:none;cursor:pointer;color:${list.interval ? 'var(--primary)' : 'var(--text-3)'};padding:4px;opacity:0.8" title="Wiederholen einstellen">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/>
+                  </svg>
+                </button>
+                ${list.id !== 'wocheneinkauf' ? `<button onclick="event.stopPropagation();deleteList('${list.id}','${esc(list.name)}')" style="background:none;border:none;cursor:pointer;color:var(--text-3);padding:4px;opacity:0.5" aria-label="Löschen">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                    <path d="M10 11v6m4-6v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                  </svg>
+                </button>` : ''}
+              </div>
+            </div>
+            ${rLabel ? `<div style="font-size:11px;font-weight:600;color:var(--primary);margin-bottom:8px">${rLabel}${nextReset ? ' · nächste Rücksetzung: ' + nextReset : ''}</div>` : ''}
+            ${list.total ? `<div style="background:var(--surface);border-radius:99px;height:4px;overflow:hidden">
+              <div style="height:100%;width:${pct}%;background:${list.accent};border-radius:99px;transition:width 0.4s ease"></div>
+            </div>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    /* ── New List Modal ── */
+    let newListAccent = '#10b981';
+    let newListRepeat = 0;
+    function openNewList() {
+      document.getElementById('newlist-name').value = '';
+      newListAccent  = '#10b981';
+      newListRepeat  = 0;
+      document.querySelectorAll('.accent-dot').forEach(d => {
+        const active = d.dataset.accent === newListAccent;
+        d.style.outline = active ? '3px solid var(--card)' : 'none';
+        d.style.outlineOffset = active ? '1px' : '0';
+        d.style.border = active ? `3px solid ${d.dataset.accent}` : '3px solid transparent';
+      });
+      document.querySelectorAll('.repeat-opt').forEach(b => setRepeatBtnStyle(b, +b.dataset.days === 0));
+      document.getElementById('newlist-modal').style.display = 'block';
+      setTimeout(() => document.getElementById('newlist-name').focus(), 80);
+    }
+    function setRepeatBtnStyle(btn, active) {
+      btn.style.borderColor  = active ? 'var(--primary)' : 'var(--card-border)';
+      btn.style.background   = active ? 'var(--primary-bg-12)' : 'transparent';
+      btn.style.color        = active ? 'var(--primary)' : 'var(--text-2)';
+    }
+    function pickRepeat(el) {
+      newListRepeat = +el.dataset.days;
+      document.querySelectorAll('.repeat-opt').forEach(b => setRepeatBtnStyle(b, b === el));
+    }
+    function closeNewListIfBg(e) {
+      if (e.target === document.getElementById('newlist-modal'))
+        document.getElementById('newlist-modal').style.display = 'none';
+    }
+    function pickAccent(el) {
+      newListAccent = el.dataset.accent;
+      document.querySelectorAll('.accent-dot').forEach(d => {
+        const active = d.dataset.accent === newListAccent;
+        d.style.outline = active ? '3px solid var(--card)' : 'none';
+        d.style.outlineOffset = active ? '1px' : '0';
+        d.style.border = active ? `3px solid ${d.dataset.accent}` : '3px solid transparent';
+      });
+    }
+    function confirmNewList() {
+      const name = document.getElementById('newlist-name').value.trim();
+      if (!name) { document.getElementById('newlist-name').focus(); return; }
+      const newId = 'list_' + Date.now();
+      const data  = { name, accent: newListAccent, createdAt: Date.now(), interval: newListRepeat, lastReset: Date.now() };
+      if (fbReady) db.ref('lists/' + newId).set(data);
+      document.getElementById('newlist-modal').style.display = 'none';
+      setActiveList(newId);
+    }
+    function deleteList(id, name) {
+      if (!confirm(`"${name}" wirklich löschen? Alle Artikel gehen verloren.`)) return;
+      if (fbReady) db.ref('lists/' + id).remove();
+      if (activeListId === id) setActiveList('wocheneinkauf');
+      showToast(name + ' gelöscht');
+    }
+
+    /* ── Repeat modal (existing lists) ── */
+    let repeatEditId = null;
+    function openRepeatModal(id, name, currentDays) {
+      repeatEditId = id;
+      document.getElementById('repeat-modal-name').textContent = name;
+      const opts = [0, 7, 14, 30];
+      document.getElementById('repeat-modal-opts').innerHTML = opts.map(days => {
+        const active = days === currentDays;
+        return `<button onclick="confirmRepeat(${days})"
+          style="padding:13px 16px;background:${active ? 'var(--primary-bg-8)' : 'var(--surface)'};border:1.5px solid ${active ? 'var(--primary)' : 'transparent'};border-radius:14px;font-size:15px;font-weight:600;color:${active ? 'var(--primary)' : 'var(--text-1)'};cursor:pointer;font-family:inherit;text-align:left;width:100%">
+          ${days === 0 ? '🚫 Nie' : '🔄 ' + REPEAT_LABELS[days]}
+          ${active ? '<span style="float:right;font-size:12px;opacity:0.6">Aktuell</span>' : ''}
+        </button>`;
+      }).join('');
+      document.getElementById('repeat-modal').style.display = 'block';
+    }
+    function confirmRepeat(days) {
+      if (repeatEditId && fbReady) {
+        db.ref('lists/' + repeatEditId).update({ interval: days, lastReset: Date.now() });
+      }
+      document.getElementById('repeat-modal').style.display = 'none';
+      showToast(days ? 'Wiederholen: ' + REPEAT_LABELS[days] : 'Automatisches Wiederholen deaktiviert');
+    }
+
+    /* ── Auto-Reset check ── */
+    function checkAutoReset(lists) {
+      if (!fbReady) return;
+      const now = Date.now();
+      lists.forEach(list => {
+        if (!list.interval) return;
+        const last = list.lastReset || list.createdAt || 0;
+        const due  = last + list.interval * 86400000;
+        if (now < due) return;
+        /* reset all items to done:false */
+        db.ref('lists/' + list.id + '/items').once('value', snap => {
+          const val = snap.val();
+          if (!val) return;
+          const updates = {};
+          Object.keys(val).forEach(k => { updates[k + '/done'] = false; });
+          db.ref('lists/' + list.id + '/items').update(updates);
+          db.ref('lists/' + list.id).update({ lastReset: now });
+          showToast(list.name + ' wurde automatisch zurückgesetzt 🔄');
+        });
+      });
     }
 
     /* ── Add recipe ingredients to list ── */
@@ -1144,7 +1621,8 @@
       const parsed = importedParsed.length ? importedParsed : parseText(text);
       if (!parsed.length) { showToast('Keine Artikel erkannt'); return; }
       parsed.forEach((p, i) => {
-        const item = { name: p.name, ...(p.qty && { qty: p.qty }), category: p.category, done: false, createdAt: Date.now() + i };
+        const store = (selectedStore === 'Alle') ? 'Sonstiges' : selectedStore;
+      const item = { name: p.name, ...(p.qty && { qty: p.qty }), category: p.category, store, done: false, createdAt: Date.now() + i };
         if (fbReady) itemsRef.push(item);
         else items.unshift({ id: '_' + (Date.now() + i), ...item });
       });
@@ -1174,8 +1652,9 @@
 
     function confirmFileImport() {
       if (!importFileParsed.length) return;
+      const storeF = (selectedStore === 'Alle') ? 'Sonstiges' : selectedStore;
       importFileParsed.forEach((p, i) => {
-        const item = { name: p.name, ...(p.qty && { qty: p.qty }), category: p.category, done: false, createdAt: Date.now() + i };
+        const item = { name: p.name, ...(p.qty && { qty: p.qty }), category: p.category, store: storeF, done: false, createdAt: Date.now() + i };
         if (fbReady) itemsRef.push(item);
         else items.unshift({ id: '_' + (Date.now() + i), ...item });
       });
