@@ -28,6 +28,9 @@
       --text-2:         #4b7a66;
       --text-3:         #8aaaa0;
       --tab-bg:         #ffffff;
+      --primary-bg:     rgba(16,185,129,0.10);
+      --primary-bg-8:   rgba(16,185,129,0.08);
+      --primary-bg-12:  rgba(16,185,129,0.12);
     }
     [data-theme="warm"] {
       --primary:        #e06a3b;
@@ -41,6 +44,9 @@
       --text-2:         #7a4e3b;
       --text-3:         #aa8a7a;
       --tab-bg:         #ffffff;
+      --primary-bg:     rgba(224,106,59,0.10);
+      --primary-bg-8:   rgba(224,106,59,0.08);
+      --primary-bg-12:  rgba(224,106,59,0.12);
     }
     [data-theme="dark"] {
       --primary:        #4ade80;
@@ -54,6 +60,9 @@
       --text-2:         #7aa08a;
       --text-3:         #4a6a5a;
       --tab-bg:         #1c2220;
+      --primary-bg:     rgba(74,222,128,0.10);
+      --primary-bg-8:   rgba(74,222,128,0.08);
+      --primary-bg-12:  rgba(74,222,128,0.12);
     }
     [data-theme="mono"] {
       --primary:        #0a0a0a;
@@ -67,6 +76,9 @@
       --text-2:         #4a4a4a;
       --text-3:         #8a8a8a;
       --tab-bg:         #ffffff;
+      --primary-bg:     rgba(10,10,10,0.10);
+      --primary-bg-8:   rgba(10,10,10,0.08);
+      --primary-bg-12:  rgba(10,10,10,0.12);
     }
 
     /* ── Reset ── */
@@ -86,6 +98,7 @@
     #root {
       max-width: 412px;
       margin: 0 auto;
+      min-height: 100vh;
       min-height: 100dvh;
       display: flex;
       flex-direction: column;
@@ -95,7 +108,7 @@
     .screen {
       flex: 1;
       overflow-y: auto;
-      overflow-x: hidden;
+      overflow-x: clip;
       padding-bottom: 80px;
     }
 
@@ -406,7 +419,7 @@
     .cat-chip.selected {
       border-color: var(--primary);
       color: var(--primary);
-      background: color-mix(in srgb, var(--primary) 8%, var(--card));
+      background: var(--primary-bg-8);
     }
 
     /* ── Animations ── */
@@ -586,15 +599,15 @@
         <!-- Weekly bar chart (static for now) -->
         <div style="display:flex;align-items:flex-end;gap:6px;height:64px;margin-bottom:8px">
           <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-            <div style="flex:1;width:100%;background:var(--surface);border-radius:6px 6px 0 0;min-height:8px;height:45%;background:color-mix(in srgb, var(--primary) 40%, var(--surface))"></div>
+            <div style="flex:1;width:100%;background:var(--primary-bg);border-radius:6px 6px 0 0;min-height:8px;height:45%;opacity:0.7"></div>
             <div style="font-size:10px;color:var(--text-3);font-weight:600">Mo</div>
           </div>
           <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-            <div style="width:100%;border-radius:6px 6px 0 0;height:70%;background:color-mix(in srgb, var(--primary) 55%, var(--surface))"></div>
+            <div style="width:100%;border-radius:6px 6px 0 0;height:70%;background:var(--primary);opacity:0.55"></div>
             <div style="font-size:10px;color:var(--text-3);font-weight:600">Di</div>
           </div>
           <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-            <div style="width:100%;border-radius:6px 6px 0 0;height:30%;background:color-mix(in srgb, var(--primary) 30%, var(--surface))"></div>
+            <div style="width:100%;border-radius:6px 6px 0 0;height:30%;background:var(--primary);opacity:0.3"></div>
             <div style="font-size:10px;color:var(--text-3);font-weight:600">Mi</div>
           </div>
           <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
@@ -602,15 +615,15 @@
             <div style="font-size:10px;color:var(--primary);font-weight:700">Do</div>
           </div>
           <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-            <div style="width:100%;border-radius:6px 6px 0 0;height:20%;background:color-mix(in srgb, var(--primary) 25%, var(--surface))"></div>
+            <div style="width:100%;border-radius:6px 6px 0 0;height:20%;background:var(--primary);opacity:0.25"></div>
             <div style="font-size:10px;color:var(--text-3);font-weight:600">Fr</div>
           </div>
           <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-            <div style="width:100%;border-radius:6px 6px 0 0;height:55%;background:color-mix(in srgb, var(--primary) 45%, var(--surface))"></div>
+            <div style="width:100%;border-radius:6px 6px 0 0;height:55%;background:var(--primary);opacity:0.45"></div>
             <div style="font-size:10px;color:var(--text-3);font-weight:600">Sa</div>
           </div>
           <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-            <div style="width:100%;border-radius:6px 6px 0 0;height:10%;background:color-mix(in srgb, var(--primary) 20%, var(--surface))"></div>
+            <div style="width:100%;border-radius:6px 6px 0 0;height:10%;background:var(--primary);opacity:0.2"></div>
             <div style="font-size:10px;color:var(--text-3);font-weight:600">So</div>
           </div>
         </div>
@@ -754,7 +767,7 @@
 
       <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-3);margin-bottom:10px">Automatisch wiederholen</div>
       <div id="newlist-repeat-opts" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
-        <button class="repeat-opt active" data-days="0"  onclick="pickRepeat(this)" style="padding:7px 14px;border-radius:99px;border:1.5px solid var(--primary);background:color-mix(in srgb,var(--primary) 12%,var(--card));font-size:13px;font-weight:600;color:var(--primary);cursor:pointer;font-family:inherit">Nie</button>
+        <button class="repeat-opt active" data-days="0"  onclick="pickRepeat(this)" style="padding:7px 14px;border-radius:99px;border:1.5px solid var(--primary);background:var(--primary-bg-12);font-size:13px;font-weight:600;color:var(--primary);cursor:pointer;font-family:inherit">Nie</button>
         <button class="repeat-opt"        data-days="7"  onclick="pickRepeat(this)" style="padding:7px 14px;border-radius:99px;border:1.5px solid var(--card-border);background:transparent;font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;font-family:inherit">1 Woche</button>
         <button class="repeat-opt"        data-days="14" onclick="pickRepeat(this)" style="padding:7px 14px;border-radius:99px;border:1.5px solid var(--card-border);background:transparent;font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;font-family:inherit">2 Wochen</button>
         <button class="repeat-opt"        data-days="30" onclick="pickRepeat(this)" style="padding:7px 14px;border-radius:99px;border:1.5px solid var(--card-border);background:transparent;font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;font-family:inherit">1 Monat</button>
@@ -1005,6 +1018,7 @@
     }
 
     function renderList() {
+      try {
       renderStoreFilter();
       renderListSwitcher();
       const el = document.getElementById('item-list');
@@ -1094,6 +1108,11 @@
       }
 
       el.innerHTML = html;
+      } catch(err) {
+        console.error('renderList error:', err);
+        const el2 = document.getElementById('item-list');
+        if (el2) el2.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Ladefehler</div><div class="empty-sub">Bitte Seite neu laden</div></div>`;
+      }
     }
 
     function clearDone() {
@@ -1188,7 +1207,7 @@
           ? `<span style="width:7px;height:7px;border-radius:50%;background:${s.dot};display:inline-block;flex-shrink:0"></span> `
           : '';
         return `<button onclick="selectStore('${s.key}')"
-          style="display:flex;align-items:center;gap:5px;padding:6px 13px;border-radius:99px;border:1.5px solid ${active ? 'var(--primary)' : 'var(--card-border)'};background:${active ? 'color-mix(in srgb, var(--primary) 10%, var(--card))' : 'var(--card)'};font-size:12px;font-weight:600;color:${active ? 'var(--primary)' : 'var(--text-2)'};white-space:nowrap;cursor:pointer;font-family:inherit;flex-shrink:0;transition:all 0.12s">
+          style="display:flex;align-items:center;gap:5px;padding:6px 13px;border-radius:99px;border:1.5px solid ${active ? 'var(--primary)' : 'var(--card-border)'};background:${active ? 'var(--primary-bg)' : 'var(--card)'};font-size:12px;font-weight:600;color:${active ? 'var(--primary)' : 'var(--text-2)'};white-space:nowrap;cursor:pointer;font-family:inherit;flex-shrink:0;transition:all 0.12s">
           ${dot}${esc(s.key)}<span style="opacity:0.55;margin-left:1px">${counts[s.key] || 0}</span>
         </button>`;
       }).join('');
@@ -1211,7 +1230,7 @@
           ? `<span style="width:10px;height:10px;border-radius:50%;background:${s.dot};display:inline-block;flex-shrink:0"></span>`
           : `<span style="width:10px;height:10px;border-radius:50%;background:var(--text-3);display:inline-block;flex-shrink:0"></span>`;
         return `<button onclick="confirmStoreChange('${s.key}')"
-          style="display:flex;align-items:center;gap:12px;padding:13px 16px;background:${active ? 'color-mix(in srgb, var(--primary) 8%, var(--card))' : 'var(--surface)'};border:1.5px solid ${active ? 'var(--primary)' : 'transparent'};border-radius:14px;font-size:15px;font-weight:600;color:${active ? 'var(--primary)' : 'var(--text-1)'};cursor:pointer;font-family:inherit;text-align:left;width:100%">
+          style="display:flex;align-items:center;gap:12px;padding:13px 16px;background:${active ? 'var(--primary-bg-8)' : 'var(--surface)'};border:1.5px solid ${active ? 'var(--primary)' : 'transparent'};border-radius:14px;font-size:15px;font-weight:600;color:${active ? 'var(--primary)' : 'var(--text-1)'};cursor:pointer;font-family:inherit;text-align:left;width:100%">
           ${dot}${esc(s.key)}
           ${active ? '<span style="margin-left:auto;font-size:12px;opacity:0.6">Aktuell</span>' : ''}
         </button>`;
@@ -1383,7 +1402,7 @@
     }
     function setRepeatBtnStyle(btn, active) {
       btn.style.borderColor  = active ? 'var(--primary)' : 'var(--card-border)';
-      btn.style.background   = active ? 'color-mix(in srgb,var(--primary) 12%,var(--card))' : 'transparent';
+      btn.style.background   = active ? 'var(--primary-bg-12)' : 'transparent';
       btn.style.color        = active ? 'var(--primary)' : 'var(--text-2)';
     }
     function pickRepeat(el) {
@@ -1428,7 +1447,7 @@
       document.getElementById('repeat-modal-opts').innerHTML = opts.map(days => {
         const active = days === currentDays;
         return `<button onclick="confirmRepeat(${days})"
-          style="padding:13px 16px;background:${active ? 'color-mix(in srgb,var(--primary) 8%,var(--card))' : 'var(--surface)'};border:1.5px solid ${active ? 'var(--primary)' : 'transparent'};border-radius:14px;font-size:15px;font-weight:600;color:${active ? 'var(--primary)' : 'var(--text-1)'};cursor:pointer;font-family:inherit;text-align:left;width:100%">
+          style="padding:13px 16px;background:${active ? 'var(--primary-bg-8)' : 'var(--surface)'};border:1.5px solid ${active ? 'var(--primary)' : 'transparent'};border-radius:14px;font-size:15px;font-weight:600;color:${active ? 'var(--primary)' : 'var(--text-1)'};cursor:pointer;font-family:inherit;text-align:left;width:100%">
           ${days === 0 ? '🚫 Nie' : '🔄 ' + REPEAT_LABELS[days]}
           ${active ? '<span style="float:right;font-size:12px;opacity:0.6">Aktuell</span>' : ''}
         </button>`;
